@@ -22,6 +22,7 @@ And Python scripts using:
  + <a href="tutorial3.html">BRDF Data conversion</a>
  + <a href="tutorial2.html">BRDF Rational fitting</a>
  + <a href="tutorial1.html">BRDF Non-Linear fitting</a>
+ + <a href="tutorial-export.html">Use BRDF data and functions</a>
 
 ### Tutorial using the XML interface
 
@@ -304,6 +305,27 @@ compareRational.update();
   [blue-paint]: http://people.csail.mit.edu/wojciech/BRDFDatabase/brdfs/blue-metallic-paint.binary
 
 
+
+
+\page tutorial-export Export BRDF data and functions
+
+It is possible to use ALTA BRDF fit or BRDF data inside different rendering engines. In this tutorial, we will see different ways to use the outputs of ALTA in different softwares. You can find the list of tools and renderers that can be used using ALTA's data or function in the \ref tools "tools page".
+
+## Using BRDF Explorer
+
+Disney's [BRDF Explorer][brdf-explorer] is a very good tool to check fits and export a first render. The simplest way to use a data or function from ALTA in this software is to convert them into a MERL data object. For example, if we have a BRDF function file `data.brdf`, we can use the following command to convert it to a MERL data file:
+
+    $ brdf2data --input function.brdf --output data.binary --data data_merl
+
+Once the file `data.binary` is created, it can be viewed inside BRDF Explorer and compared to another BRDF file or shader for example.
+
+It is also possible to generate a BRDF Explorer shader from an ALTA function when the functionality is encoded in the function plugin using the following command:
+
+    $ brdf2brdf --input function.brdf --output function.shader --export explorer
+
+This will generate `function.shader`, a BRDF Explorer compatible shader.
+
+  [brdf-explorer]: https://www.disneyanimation.com/technology/brdf.html
 
 
 \page xml-tutorial1 Using the XML interface
