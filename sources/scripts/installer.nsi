@@ -9,7 +9,8 @@ Outfile "ALTA.exe"
 
 InstallDir "$DESKTOP\ALTA"
 
-!define ALTADIR "${__FILEDIR__}\..\.."
+;!define ALTADIR "${__FILEDIR__}\..\.."
+!define ALTADIR "..\.."
 
 # Request application privileges for Windows Vista
 RequestExecutionLevel user
@@ -60,8 +61,9 @@ Section "ALTA" SecMain
   File "${ALTADIR}\build\plugins\rational*.dll"
   File "${ALTADIR}\build\plugins\data*.dll"
 
-  SetOutPath $INSTDIR\python
-  File "${ALTADIR}\build\python\alta.dll"
+  ; Python package is not compiling yet
+  ;SetOutPath $INSTDIR\python
+  ;File "${ALTADIR}\build\python\alta.dll"
 
   # Update the ENVIROMNENT
   WriteRegStr HKCU "Environment" "ALTA_DIR"   '$INSTDIR'
