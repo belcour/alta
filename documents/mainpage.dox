@@ -39,7 +39,7 @@ ALTA is free software available under the [Mozilla Public License,
 version 2.0](http://mozilla.org/MPL/2.0/).  The latest release, version
 0.2, can be obtained from the Git repository:
 
-    $ git clone https://gforge.inria.fr/git/alta/alta.git
+    $ git clone https://gitlab.inria.fr/alta/alta.git
     $ git checkout v0.2
 
 See \ref install "the installation instruction" for more information.
