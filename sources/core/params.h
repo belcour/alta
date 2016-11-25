@@ -415,6 +415,17 @@ class params
 
       static void print_input_params();
 
+      //! \brief Check whether or not a (light,view) configuration is above the hemisphere
+      //! \return true if both vectors (light and view) are above and false otherwise
+      //! \remark the function returns true also for grazing, tangential configuration 
+      //! (i.e., where light dot normal == 0 or view dot normal == 0)
+      static bool is_above_hemisphere( double* invec,         params::input intype );
+
+      static bool inline is_below_hemisphere( double* invec,         params::input intype )
+      {
+        return ! is_above_hemisphere(invec, intype);
+      }
+
 };
 
 /*! \brief A parameters object. Allow to define function object (either data
