@@ -189,12 +189,17 @@ def library_available(env, pkgspec='', lib='', header='',
   return result
 
 def openexr_available(env):
-		"""Return True if OpenEXR is available."""
-		return library_available(env, pkgspec='OpenEXR',
-								 inc_var='OPENEXR_INC',
-								 lib_var='OPENEXR_DIR',
-								 lib='OPENEXR_LIB',
-								 header='ImfRgbaFile.h')
+   """Return True if OpenEXR is available."""
+   env.AppendUnique(CPPPATH = '#external')
+   conf = Configure(env)
+   has_tinyexr = conf.CheckCXXHeader('tinyexr/tinyexr.h')
+   conf.Finish()
+   return has_tinyexr
+   #return library_available(env, pkgspec='OpenEXR',
+   #						 inc_var='OPENEXR_INC',
+   #						 lib_var='OPENEXR_DIR',
+   #						 lib='OPENEXR_LIB',
+   #						 header='ImfRgbaFile.h')
 
 def CheckOpenMP(context):
   """

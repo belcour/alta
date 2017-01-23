@@ -90,7 +90,7 @@ private: // data
 public: // methods
 
     MERL(const parameters& params) :
-      data(params, MERL_SIZE), _nSlice(MERL_SIZE) {
+      data(parameters(3, 3, params::RUSIN_TH_TD_PD, params::RGB_COLOR), MERL_SIZE), _nSlice(MERL_SIZE) {
 		brdf = new double[3*_nSlice];
 		std::fill(brdf, brdf + 3*_nSlice, 0.0);
 
@@ -151,7 +151,7 @@ public: // methods
 	}
 
 	void set(int i, const vec& x) {
-    assert(x.size() == parametrization().dimY());
+    	assert(x.size() == parametrization().dimX() + parametrization().dimY());
 		int iR = i;
 		int iG = iR + _nSlice;
 		int iB = iG + _nSlice;

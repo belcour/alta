@@ -8,7 +8,7 @@ if have_openexr:
   # does not install:
   # <https://lists.nongnu.org/archive/html/openexr-devel/2016-06/msg00001.html>.
   conf = Configure(env)
-  have_openexr = conf.CheckCXXHeader('ImfStdIO.h')
+  have_openexr = conf.CheckCXXHeader('tinyexr/tinyexr.h')
   conf.Finish()
 
 # Special linking flags, defined in the OS dependant configuration file
