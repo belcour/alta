@@ -142,7 +142,7 @@ void vertical_segment::get(int i, vec& yl, vec& yu) const
 
 vec vertical_segment::get(int i) const
 {
-    return data_view().col(i);
+    return data_view().row(i);
 }
 
 void vertical_segment::set(int i, const vec& x)

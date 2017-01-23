@@ -1,6 +1,6 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
-   Copyright (C) 2015, 2016 Inria
+   Copyright (C) 2015, 2016, 2017 Inria
 
    This file is part of ALTA.
 
@@ -23,6 +23,7 @@
 
 #include <string>
 #include <iostream>
+#include <sstream>
 
 #include <cstring>
 #include <cstdlib>
@@ -36,6 +37,49 @@
 #endif
 
 using namespace alta;
+
+// Try loading a simple example from a text-format stream.
+static void test_simple_load_from_text()
+{
+    static const char example[] = "\
+#DIM 1 3f\n\
+#VS 0\n\
+#PARAM_IN COS_TH\n\
+#PARAM_OUT RGB_COLOR\n\
+0 1 2 3\n\
+4 5 6 7\n\
+8 9 10 11\n";
+
+    std::istringstream input(example);
+
+    auto data = dynamic_pointer_cast<vertical_segment>(
+        plugins_manager::load_data("vertical_segment", input));
+    TEST_ASSERT(data != NULL);
+
+    TEST_ASSERT(data->size() == 3);
+    TEST_ASSERT(data->parametrization().input_parametrization()
+                == params::COS_TH);
+    TEST_ASSERT(data->parametrization().output_parametrization()
+                == params::RGB_COLOR);
+
+    // Currently we always get ASYMMETRICAL_CONFIDENCE_INTERVAL for backward
+    // compatibility reasons.
+    TEST_ASSERT(data->confidence_interval_kind()
+                == vertical_segment::ASYMMETRICAL_CONFIDENCE_INTERVAL);
+
+    TEST_ASSERT(data->get(0) == Eigen::Vector4d(0., 1., 2., 3.));
+    TEST_ASSERT(data->get(1) == Eigen::Vector4d(4., 5., 6., 7.));
+    TEST_ASSERT(data->get(2) == Eigen::Vector4d(8., 9., 10., 11.));
+
+    // The "matrix view" includes confidence interval data.
+    auto view = data->matrix_view();
+    TEST_ASSERT(view.cols() == 1 + 3 + 2 * 3);
+    TEST_ASSERT(view.rows() == 3);
+    TEST_ASSERT(view.col(0) == Eigen::Vector3d(0., 4., 8.));
+    TEST_ASSERT(view.col(1) == Eigen::Vector3d(1., 5., 9.));
+    TEST_ASSERT(view.col(2) == Eigen::Vector3d(2., 6., 10.));
+    TEST_ASSERT(view.col(3) == Eigen::Vector3d(3., 7., 11.));
+}
 
 // Files that are automatically deleted upon destruction.
 class temporary_file
@@ -116,6 +160,10 @@ int main(int argc, char** argv)
         input_file = data_dir + "/" + data_file;
     }
 
+    // Simple test first.
+    test_simple_load_from_text();
+
+    // Try a sequence of loads and saves.
     try
     {
         std::ifstream input;

@@ -1,7 +1,7 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
    Copyright (C) 2014 CNRS
-   Copyright (C) 2013, 2014, 2015, 2016 Inria
+   Copyright (C) 2013, 2014, 2015, 2016, 2017 Inria
 
    This file is part of ALTA.
 
@@ -38,6 +38,8 @@
 typedef Eigen::VectorXd vec;
 typedef Eigen::Ref<vec> vecref;
 typedef Eigen::Ref<const vec> const_vecref;
+typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+    RowMatrixXd;
 
 // Convenience functions.
 static inline double norm(const vec& v)
