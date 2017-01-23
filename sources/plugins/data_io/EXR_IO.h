@@ -26,7 +26,7 @@ template<typename FType>
 class t_EXR_IO
 {
 	public:
-		static bool LoadEXR(std::istream& input, int& W,int& H, FType *& pix,int nC=3) 
+		static bool LoadEXR(std::istream& input, int& W,int& H, FType *& pix,int nC=3)
 		{
 #ifdef USE_OPENEXR
 			/* XXX: OpenEXR implements its own IStream and OStream classes, but
@@ -90,7 +90,7 @@ class t_EXR_IO
 			/* Load the EXR version using TinyEXR */
 			EXRVersion _version;
 			_r = ParseEXRVersionFromMemory(&_version, &_memory[0]);
-			if(_r != 0) {
+			if(_r != TINYEXR_SUCCESS) {
 				std::cerr << "<<ERROR>> Could not load EXR version from stream" << std::endl;
 				return false;
 			} else {
@@ -101,20 +101,25 @@ class t_EXR_IO
 			EXRHeader _header;
   			InitEXRHeader(&_header);
 			_r = ParseEXRHeaderFromMemory(&_header, &_version, &_memory[0], &_err);
-			if(_r != 0) {
+			if(_r != TINYEXR_SUCCESS) {
 				std::cerr << "<<ERROR>> Could not load EXR header from stream" << std::endl;
 				std::cerr << "<<ERROR>> " << _err << std::endl;
 				return false;
 			} else {
 				std::cout << "<<DEBUG>> Loading a " << _header.num_channels << " channels EXR file" << std::endl;
 			}
-			
+
+			/* Set the requested pixel types  */
+			for(int i=0; i<_header.num_channels; ++i) {
+				_header.pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
+			}
+
 			/* Load the EXR image */
 			EXRImage _image;
   			InitEXRImage(&_image);
 
 			_r = LoadEXRImageFromMemory(&_image, &_header, &_memory[0], &_err);
-			if (_r != 0) {
+			if (_r != TINYEXR_SUCCESS) {
 				std::cerr << "<<ERROR>> Could not load EXR image from stream" << std::endl;
 				std::cerr << "<<ERROR>> " << _err << std::endl;
 				return false;
@@ -130,10 +135,25 @@ class t_EXR_IO
 			W = _image.width;
 			H = _image.height;
 			pix = new FType[W*H*3];
-			for(int i=0; i<W*H; ++i) {
-				pix[3*i + 0] = _image.images[0][i];
-				pix[3*i + 1] = _image.images[1][i];
-				pix[3*i + 2] = _image.images[2][i];
+			for(int k=0; k<_header.num_channels; ++k) {
+				float* img = reinterpret_cast<float *>(_image.images[k]);
+
+				for(int i=0; i<W*H; ++i) {
+					const double val = (FType)(img[i]);
+					switch(_header.channels[k].name[0]) {
+						case 'R':
+							pix[3*i + 0] = val;
+							break;
+						case 'G':
+							pix[3*i + 1] = val;
+							break;
+						case 'B':
+							pix[3*i + 2] = val;
+							break;
+						default:
+							std::cout << "<<DEBUG>> Unknow EXR channel \'" << _header.channels[k].name[0] << "\'" << std::endl;
+					}
+				}
 			}
 
 			/*! \todo Free TinyEXR memory : _image, _header and _version */
@@ -150,8 +170,8 @@ class t_EXR_IO
 			switch(nC)
 			{
 				case 3:
-					for (int row=0;row<H;row++) 
-						for(int i=0;i<W;i++) 
+					for (int row=0;row<H;row++)
+						for(int i=0;i<W;i++)
 						{
 							Imf::Rgba &p = pixels[H-row-1][i];
 
@@ -163,8 +183,8 @@ class t_EXR_IO
 					break ;
 
 				case 1:
-					for (int row=0;row<H;row++) 
-						for(int i=0;i<W;i++) 
+					for (int row=0;row<H;row++)
+						for(int i=0;i<W;i++)
 						{
 							Imf::Rgba &p = pixels[H-row-1][i];
 
@@ -213,13 +233,13 @@ class t_EXR_IO
 			image.height = H;
 
 			header.num_channels = 3;
-			header.channels = (EXRChannelInfo *)malloc(sizeof(EXRChannelInfo) * header.num_channels); 
+			header.channels = (EXRChannelInfo *)malloc(sizeof(EXRChannelInfo) * header.num_channels);
 			// Must be (A)BGR order, since most of EXR viewers expect this channel order.
 			strncpy(header.channels[0].name, "B", 255); header.channels[0].name[strlen("B")] = '\0';
 			strncpy(header.channels[1].name, "G", 255); header.channels[1].name[strlen("G")] = '\0';
 			strncpy(header.channels[2].name, "R", 255); header.channels[2].name[strlen("R")] = '\0';
 
-			header.pixel_types = (int *)malloc(sizeof(int) * header.num_channels); 
+			header.pixel_types = (int *)malloc(sizeof(int) * header.num_channels);
 			header.requested_pixel_types = (int *)malloc(sizeof(int) * header.num_channels);
 			for (int i = 0; i < header.num_channels; i++) {
 				header.pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT; // pixel type of input image
@@ -236,7 +256,7 @@ class t_EXR_IO
 
 			free(header.channels);
 			free(header.pixel_types);
-			free(header.requested_pixel_types);		
+			free(header.requested_pixel_types);
 #endif
 			return true ;
 		}
