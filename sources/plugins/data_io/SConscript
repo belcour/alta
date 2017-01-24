@@ -2,6 +2,10 @@ Import('env', 'openexr_available')
 env = env.Clone()
 
 have_openexr = openexr_available(env)
+if not have_openexr:
+  print "<<ERROR>> Could not locate TinyEXR : EXR related plugins won't be built."
+  print "          Please use `git submodule init` and 'git submodule update` to get TinyEXR."
+
 
 if have_openexr:
   # Make sure we have the 'ImfStdIO.h' header, which OpenEXR 2.2.0

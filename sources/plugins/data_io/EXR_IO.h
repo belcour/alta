@@ -1,76 +1,39 @@
-#pragma once
-/* EXR_IO provides static method to either load an RGB EXR file into a floatting
- * point array or save a RGB floatting point array to disk._data
- *
- * Original author: Cyril Soler
- * Modified by: Laurent Belcour
- */
+/* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
+   Copyright (C) 2017 Unity Technologies
+
+   This file is part of ALTA.
+
+   This Source Code Form is subject to the terms of the Mozilla Public
+   License, v. 2.0.  If a copy of the MPL was not distributed with this
+   file, You can obtain one at http://mozilla.org/MPL/2.0/.  */
+#pragma once
+
+// STL includes
 #include <stdexcept>
 #include <cassert>
 
-#ifdef USE_OPENEXR
-	#include <ImfRgbaFile.h>
-	#include <ImfArray.h>
+// TinyEXR includes
+#define TINYEXR_IMPLEMENTATION
+#include <tinyexr/tinyexr.h>
 
-	// XXX: This header is not installed as of version 2.2.0 of OpenEXR, see
-	// <https://lists.nongnu.org/archive/html/openexr-devel/2016-06/msg00001.html>
-	// and <https://github.com/openexr/openexr/pull/184>.
-	#include <ImfStdIO.h>
-#else
-	#define TINYEXR_IMPLEMENTATION
-	#include <tinyexr/tinyexr.h>
-#endif
 
+/*! \class EXR_IO
+ *
+ * \details
+ * EXR_IO provides static method to either load an RGB EXR file into a floatting
+ * point array or save a RGB floatting point array to disk._data
+ *
+ * \author Laurent Belcour
+ */
 template<typename FType>
 class t_EXR_IO
 {
 	public:
+		/*! \brief Load an EXR file from an input file stream.
+		 */
 		static bool LoadEXR(std::istream& input, int& W,int& H, FType *& pix,int nC=3)
 		{
-#ifdef USE_OPENEXR
-			/* XXX: OpenEXR implements its own IStream and OStream classes, but
-			 * they are completely independent from those of libstdc++.  The
-			 * closest thing it has is 'StdIFStream', hence this hack.
-			 */
-			std::ifstream* ifstream = dynamic_cast<std::ifstream*>(&input);
-			assert(ifstream != NULL);
-
-			Imf::StdIFStream iifstream(*ifstream, "unknown file name");
-
-			Imf::RgbaInputFile file(iifstream);
-			Imath::Box2i dw = file.dataWindow();
-
-			W = dw.max.x - dw.min.x + 1;
-			H = dw.max.y - dw.min.y + 1;
-
-			Imf::Array2D<Imf::Rgba> pixels;
-			pixels.resizeErase(H, W);
-
-			file.setFrameBuffer (&pixels[0][0] - dw.min.x - dw.min.y * W, 1, W);
-			file.readPixels (dw.min.y, dw.max.y);
-
-			pix = new FType[W*H*3] ;
-
-			switch(nC)
-			{
-				case 3: for(int i=0;i<H;++i)
-							  for(int j=0;j<W;++j)
-							  {
-								  pix[3*(j+i*W)+0] = pixels[H-i-1][j].r ;
-								  pix[3*(j+i*W)+1] = pixels[H-i-1][j].g ;
-								  pix[3*(j+i*W)+2] = pixels[H-i-1][j].b ;
-							  }
-						  break ;
-
-				case 1: for(int i=0;i<H;++i)
-							  for(int j=0;j<W;++j)
-								  pix[j+i*W] = 0.3*pixels[H-i-1][j].r + 0.59*pixels[H-i-1][j].g + 0.11*pixels[H-i-1][j].b ;
-						  break ;
-				default:
-						  throw std::runtime_error("Unexpected case in EXR_IO.") ;
-			}
-#else
 			/* Convert the input std::istream into an unsigned char array */
 			std::vector<unsigned char> _memory;
 			size_t _n = 0, _m = 0;
@@ -154,56 +117,18 @@ class t_EXR_IO
 				}
 			}
 
-			// Check: saver the file
-			SaveEXR("dump.exr", W, H, pix);
-
-			/*! \todo Free TinyEXR memory : _image, _header and _version */
-#endif
+			/* Free TinyEXR memory */
+			_r = FreeEXRHeader(&_header);
+			_r = FreeEXRImage(&_image);
 			return true ;
 		}
 
+		/*! \brief Save a RGB image into and OpenEXR file using TinyEXR.
+		 *  This code uses TinyEXR's reference implementation of saving a file as
+		 *  we do not manipulate streams here.
+		 */
 		static bool SaveEXR(const char *filename,int W,int H, const FType *pix,int nC=3)
 		{
-#ifdef USE_OPENEXR
-			Imf::Array2D<Imf::Rgba> pixels(H,W);
-
-			/* Convert separated channel representation to per pixel representation */
-			switch(nC)
-			{
-				case 3:
-					for (int row=0;row<H;row++)
-						for(int i=0;i<W;i++)
-						{
-							Imf::Rgba &p = pixels[H-row-1][i];
-
-							p.r = pix[3*(i+row*W)+0] ;
-							p.g = pix[3*(i+row*W)+1] ;
-							p.b = pix[3*(i+row*W)+2] ;
-							p.a = 1.0 ;
-						}
-					break ;
-
-				case 1:
-					for (int row=0;row<H;row++)
-						for(int i=0;i<W;i++)
-						{
-							Imf::Rgba &p = pixels[H-row-1][i];
-
-							p.r = pix[i+row*W] ;
-							p.g = pix[i+row*W] ;
-							p.b = pix[i+row*W] ;
-							p.a = FType(1.0) ;
-						}
-					break ;
-				default:
-					throw std::runtime_error("Unexpected case in EXR_IO.") ;
-			}
-
-			Imf::RgbaOutputFile file(filename, W, H, Imf::WRITE_RGBA);
-			file.setFrameBuffer(&pixels[0][0], 1, W);
-			file.writePixels(H);
-
-#else
 			EXRHeader header;
 			InitEXRHeader(&header);
 
@@ -258,7 +183,6 @@ class t_EXR_IO
 			free(header.channels);
 			free(header.pixel_types);
 			free(header.requested_pixel_types);
-#endif
 			return true ;
 		}
 };
