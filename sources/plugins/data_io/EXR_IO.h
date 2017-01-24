@@ -111,7 +111,7 @@ class t_EXR_IO
 
 			/* Set the requested pixel types  */
 			for(int i=0; i<_header.num_channels; ++i) {
-				_header.pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
+				_header.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
 			}
 
 			/* Load the EXR image */
@@ -135,11 +135,9 @@ class t_EXR_IO
 			W = _image.width;
 			H = _image.height;
 			pix = new FType[W*H*3];
-			for(int k=0; k<_header.num_channels; ++k) {
-				float* img = reinterpret_cast<float *>(_image.images[k]);
-
+			for(int k=0; k<_image.num_channels; ++k) {
 				for(int i=0; i<W*H; ++i) {
-					const double val = (FType)(img[i]);
+					const FType val = (FType)(reinterpret_cast<float **>(_image.images)[k][i]);
 					switch(_header.channels[k].name[0]) {
 						case 'R':
 							pix[3*i + 0] = val;
@@ -155,6 +153,9 @@ class t_EXR_IO
 					}
 				}
 			}
+
+			// Check: saver the file
+			SaveEXR("dump.exr", W, H, pix);
 
 			/*! \todo Free TinyEXR memory : _image, _header and _version */
 #endif
