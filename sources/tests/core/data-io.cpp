@@ -71,6 +71,16 @@ static void test_simple_load_from_text()
     TEST_ASSERT(data->get(1) == Eigen::Vector4d(4., 5., 6., 7.));
     TEST_ASSERT(data->get(2) == Eigen::Vector4d(8., 9., 10., 11.));
 
+    // Check the result of the other 'get' methods.
+    vec x, y_lower, y_upper;
+    data->get(1, x, y_lower, y_upper);
+    TEST_ASSERT(x == Eigen::VectorXd::Constant(1, 4.));
+    TEST_ASSERT(y_lower == Eigen::Vector3d(5., 6., 7.));
+    TEST_ASSERT(y_lower == y_upper);
+    data->get(1, y_lower, y_upper);
+    TEST_ASSERT(y_lower == Eigen::Vector3d(5., 6., 7.));
+    TEST_ASSERT(y_lower == y_upper);
+
     // The "matrix view" includes confidence interval data.
     auto view = data->matrix_view();
     TEST_ASSERT(view.cols() == 1 + 3 + 2 * 3);
