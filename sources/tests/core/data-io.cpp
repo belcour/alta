@@ -63,7 +63,7 @@ static void test_simple_load_from_text()
                 == params::RGB_COLOR);
 
     // Currently we always get ASYMMETRICAL_CONFIDENCE_INTERVAL for backward
-    // compatibility reasons.
+    // compatibility reasons.  The default confidence interval is ±0.1.
     TEST_ASSERT(data->confidence_interval_kind()
                 == vertical_segment::ASYMMETRICAL_CONFIDENCE_INTERVAL);
 
@@ -75,11 +75,11 @@ static void test_simple_load_from_text()
     vec x, y_lower, y_upper;
     data->get(1, x, y_lower, y_upper);
     TEST_ASSERT(x == Eigen::VectorXd::Constant(1, 4.));
-    TEST_ASSERT(y_lower == Eigen::Vector3d(5., 6., 7.));
-    TEST_ASSERT(y_lower == y_upper);
+    TEST_ASSERT(y_lower == Eigen::Vector3d(4.9, 5.9, 6.9));
+    TEST_ASSERT(y_upper == Eigen::Vector3d(5.1, 6.1, 7.1));
     data->get(1, y_lower, y_upper);
-    TEST_ASSERT(y_lower == Eigen::Vector3d(5., 6., 7.));
-    TEST_ASSERT(y_lower == y_upper);
+    TEST_ASSERT(y_lower == Eigen::Vector3d(4.9, 5.9, 6.9));
+    TEST_ASSERT(y_upper == Eigen::Vector3d(5.1, 6.1, 7.1));
 
     // The "matrix view" includes confidence interval data.
     auto view = data->matrix_view();

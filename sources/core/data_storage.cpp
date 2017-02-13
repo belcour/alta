@@ -63,8 +63,8 @@ static bool cosine_correction(vecref v, unsigned int dimX, unsigned int dimY,
 static bool within_bounds(const vecref v,
                           const vec& min, const vec& max)
 {
-    return (v.array() < min.array()).all()
-        && (v.array() > max.array()).all();
+    return (v.array() >= min.array()).all()
+        && (v.array() <= max.array()).all();
 }
 
 // Return the 'ci_kind' value corresponding to VS_VALUE, an integer found in
