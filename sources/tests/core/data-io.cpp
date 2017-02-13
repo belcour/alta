@@ -229,6 +229,26 @@ int main(int argc, char** argv)
         // confidence interval on Y.
         TEST_ASSERT(vs_sample1->matrix_view() == vs_sample2->matrix_view());
         TEST_ASSERT(vs_sample1->matrix_view() == vs_sample3->matrix_view());
+
+        auto dimX = sample1->parametrization().dimX();
+        auto dimY = sample1->parametrization().dimY();
+        for (auto i = 0; i < vs_sample1->size(); i++)
+        {
+            vec row = vs_sample1->matrix_view().row(i);
+            vec x = row.segment(0, dimX);
+            vec y = row.segment(dimX, dimY);
+            vec yl = row.segment(dimX + dimY, dimY);
+            vec yu = row.segment(dimX + 2 * dimY, dimY);
+
+            // Make sure the default confidence interval is used.
+            TEST_ASSERT(yl == y - Eigen::VectorXd::Constant(dimY, 0.1));
+            TEST_ASSERT(yu == y + Eigen::VectorXd::Constant(dimY, 0.1));
+
+            // Make sure this is consistent with the 'get' method.
+            vec x2, yl2, yu2;
+            vs_sample1->get(i, x2, yl2, yu2);
+            TEST_ASSERT(x2 == x && yl2 == yl && yu2 == yu);
+        }
     }
     CATCH_FILE_IO_ERROR(input_file);
 

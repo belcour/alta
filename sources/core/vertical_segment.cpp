@@ -1,6 +1,6 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
-   Copyright (C) 2013, 2014, 2015, 2016 Inria
+   Copyright (C) 2013, 2014, 2015, 2016, 2017 Inria
 
    This file is part of ALTA.
 
@@ -110,20 +110,15 @@ void vertical_segment::get(int i, vec& x, vec& yl, vec& yu) const
 
     auto row = matrix_view().row(i);
 
-    x.resize(_parameters.dimX());
-    x = row.segment(0, _parameters.dimX()).transpose();
+    x = row.segment(0, _parameters.dimX());
 
-    auto y = row.segment(_parameters.dimX(), _parameters.dimY()).transpose();
-    yl.resize(_parameters.dimY()); yu.resize(_parameters.dimY());
+    auto y = row.segment(_parameters.dimX(), _parameters.dimY());
 
     yl = row.segment(_parameters.dimX() + _parameters.dimY(),
-                     _parameters.dimY()).transpose();
-
-    yl += y;
+                     _parameters.dimY());
 
     yu = row.segment(_parameters.dimX() + 2 * _parameters.dimY(),
-                     _parameters.dimY()).transpose();
-    yu += y;
+                     _parameters.dimY());
 }
 
 void vertical_segment::get(int i, vec& yl, vec& yu) const
