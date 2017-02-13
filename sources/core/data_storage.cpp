@@ -115,7 +115,7 @@ static void read_confidence_interval(std::istream& input,
         else
         {
             // Confidence interval data not provided in INPUT.
-            double dt = args.get_float("dt", 0.1f);
+            double dt = args.get_double("dt", 0.1d);
             min_dt = -dt;
             max_dt =  dt;
         }
