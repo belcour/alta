@@ -153,12 +153,9 @@ static void read_confidence_interval(std::istream& input,
 }
 
 alta::data* alta::load_data_from_text(std::istream& input,
-                                      const alta::arguments& header)
+                                      const alta::arguments& header,
+                                      const alta::arguments& args)
 {
-  // FIXME: Eventually reinstate support for extra arguments when loading a
-  // file.
-  static alta::arguments args;
-
   vec min, max ;
   vec ymin, ymax;
 

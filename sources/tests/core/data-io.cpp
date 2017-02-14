@@ -91,6 +91,38 @@ static void test_simple_load_from_text()
     TEST_ASSERT(view.col(3) == Eigen::Vector3d(3., 7., 11.));
 }
 
+// Try loading a simple example from a text-format stream, with extra
+// filtering arguments.
+static void test_simple_load_from_text_filtering()
+{
+    static const char example[] = "\
+#DIM 1 3f\n\
+#VS 0\n\
+#PARAM_IN COS_TH\n\
+#PARAM_OUT RGB_COLOR\n\
+0 1 2 3\n\
+1 4 5 6\n\
+2 7 8 9\n\
+3 10 11 12\n\
+4 7 7 7\n";
+
+    std::istringstream input(example);
+
+    // Filter out elements that are not within those boundaries.
+    arguments args =
+        { { "ymin", "4" }, { "ymax", "10" }, { "max", "3" } };
+
+    auto data = dynamic_pointer_cast<vertical_segment>(
+        plugins_manager::load_data("vertical_segment", input, args));
+    TEST_ASSERT(data != NULL);
+
+    // There should be only 2 elements left after filtering.
+    TEST_ASSERT(data->size() == 2);
+
+    TEST_ASSERT(data->get(0) == Eigen::Vector4d(1., 4., 5., 6.));
+    TEST_ASSERT(data->get(1) == Eigen::Vector4d(2., 7., 8., 9.));
+}
+
 // Files that are automatically deleted upon destruction.
 class temporary_file
 {
@@ -170,8 +202,9 @@ int main(int argc, char** argv)
         input_file = data_dir + "/" + data_file;
     }
 
-    // Simple test first.
+    // Simple tests first.
     test_simple_load_from_text();
+    test_simple_load_from_text_filtering();
 
     // Try a sequence of loads and saves.
     try
