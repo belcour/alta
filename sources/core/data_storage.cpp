@@ -1,6 +1,6 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
-   Copyright (C) 2013, 2014, 2015, 2016 Inria
+   Copyright (C) 2013, 2014, 2015, 2016, 2017 Inria
 
    This file is part of ALTA.
 
@@ -217,25 +217,26 @@ alta::data* alta::load_data_from_text(std::istream& input,
       for (int i = 0; i < 2 * dim.second; i++)
           content.push_back(0.);
 
-      // If data is not in the interval of fit
-      // std::cout << " start = " << start << " rows = " << row_count
-      //           << " size = " << content.size() << "\n";
       Map<VectorXd> v(&content[start], row_count);
-      if (!(within_bounds(v.segment(0, dim.first), min, max)
-            && within_bounds(v.segment(dim.first, dim.second),
-                             ymin, ymax)))
-          continue;
-
-      if(args.is_defined("data-correct-cosine"))
-      {
-          if (!cosine_correction(v.segment(0, dim.first + dim.second),
-                                 dim.first, dim.second, in_param))
-              continue;
-      }
 
       // Read the confidence interval data if available.
       read_confidence_interval(linestream, v, kind,
                                dim.first, dim.second, args);
+
+      // Check if we need to filter out what we just read according to ARGS.
+      // TODO: Move filtering to a post-parsing operation on 'data'.
+      if (!(within_bounds(v.segment(0, dim.first), min, max)
+            && within_bounds(v.segment(dim.first, dim.second),
+                             ymin, ymax)))
+      {
+          content.resize(start);
+      }
+      else if (args.is_defined("data-correct-cosine"))
+      {
+          if (!cosine_correction(v.segment(0, dim.first + dim.second),
+                                 dim.first, dim.second, in_param))
+              content.resize(start);
+      }
     }
   }
 
