@@ -123,6 +123,37 @@ static void test_simple_load_from_text_filtering()
     TEST_ASSERT(data->get(1) == Eigen::Vector4d(2., 7., 8., 9.));
 }
 
+// Likewise, but using the vector syntax for boundaries.
+static void test_simple_load_from_text_filtering_vectors()
+{
+    static const char example[] = "\
+#DIM 1 3f\n\
+#VS 0\n\
+#PARAM_IN COS_TH\n\
+#PARAM_OUT RGB_COLOR\n\
+-1 4 4 4\n\
+ 0 1 2 3\n\
+ 1 4 5 6\n\
+ 2 7 8 9\n\
+ 3 10 11 12\n\
+ 4 7 7 7\n";
+
+    std::istringstream input(example);
+
+    arguments args =
+        { { "ymin", "[ 4, 5, 6 ]" }, { "max", "[ 3 ]" } };
+
+    auto data = plugins_manager::load_data("vertical_segment", input, args);
+    TEST_ASSERT(data != NULL);
+
+    // There should be only 3 elements left after filtering.
+    TEST_ASSERT(data->size() == 3);
+
+    TEST_ASSERT(data->get(0) == Eigen::Vector4d(1., 4., 5., 6.));
+    TEST_ASSERT(data->get(1) == Eigen::Vector4d(2., 7., 8., 9.));
+    TEST_ASSERT(data->get(2) == Eigen::Vector4d(3., 10., 11., 12.));
+}
+
 // Files that are automatically deleted upon destruction.
 class temporary_file
 {
@@ -205,6 +236,7 @@ int main(int argc, char** argv)
     // Simple tests first.
     test_simple_load_from_text();
     test_simple_load_from_text_filtering();
+    test_simple_load_from_text_filtering_vectors();
 
     // Try a sequence of loads and saves.
     try
