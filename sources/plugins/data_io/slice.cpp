@@ -18,8 +18,9 @@
 
 using namespace alta;
 
+
 // Allow for a different parametrization depending on the arguments provided.
-static const parameters
+static const alta::parameters
 brdf_slice_parameters(const arguments& args)
 {
     auto result = alta::parameters(2, 3,

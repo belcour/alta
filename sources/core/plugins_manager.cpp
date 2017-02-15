@@ -1,7 +1,7 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
    Copyright (C) 2014, 2015 CNRS
-   Copyright (C) 2013, 2014, 2015, 2016 Inria
+   Copyright (C) 2013, 2014, 2015, 2016, 2017 Inria
 
    This file is part of ALTA.
 
@@ -486,8 +486,7 @@ ptr<data> plugins_manager::load_data(const std::string& type, std::istream& inpu
         if (header["FORMAT"] == "binary") {
             result = ptr<data>(load_data_from_binary(input, header));
         } else {
-            // FIXME: ARGS is currently ignored.
-            result = ptr<data>(load_data_from_text(input, header));
+            result = ptr<data>(load_data_from_text(input, header, args));
         }
     }
     else

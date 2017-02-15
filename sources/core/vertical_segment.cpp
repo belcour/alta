@@ -1,6 +1,6 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
-   Copyright (C) 2013, 2014, 2015, 2016 Inria
+   Copyright (C) 2013, 2014, 2015, 2016, 2017 Inria
 
    This file is part of ALTA.
 
@@ -108,41 +108,28 @@ void vertical_segment::get(int i, vec& x, vec& yl, vec& yu) const
     // Make sure we have the lower and upper bounds of Y.
     assert(confidence_interval_kind() == ASYMMETRICAL_CONFIDENCE_INTERVAL);
 
-    auto matrix = matrix_view();
+    auto row = matrix_view().row(i);
 
-#ifdef DEBUG
-    assert(i >= 0 && i < matrix.size());
-#endif
-    x.resize(_parameters.dimX()); yl.resize(_parameters.dimY()) ; yu.resize(_parameters.dimY()) ;
-    for(int j=0; j<_parameters.dimX(); ++j)
-    {
-        x[j] = matrix(i, j);
-    }
-    for(int j=0; j<_parameters.dimY(); ++j)
-    {
-        yl[j] = matrix(i, _parameters.dimX() + 1*_parameters.dimY() + j);
-        yu[j] = matrix(i, _parameters.dimX() + 2*_parameters.dimY() + j);
-    }
+    x = row.segment(0, _parameters.dimX());
+
+    auto y = row.segment(_parameters.dimX(), _parameters.dimY());
+
+    yl = row.segment(_parameters.dimX() + _parameters.dimY(),
+                     _parameters.dimY());
+
+    yu = row.segment(_parameters.dimX() + 2 * _parameters.dimY(),
+                     _parameters.dimY());
 }
 
 void vertical_segment::get(int i, vec& yl, vec& yu) const
 {
-    // Make sure we have the lower and upper bounds of Y.
-    assert(confidence_interval_kind() == ASYMMETRICAL_CONFIDENCE_INTERVAL);
-
-    auto matrix = matrix_view();
-
-    yl.resize(_parameters.dimY()) ; yu.resize(_parameters.dimY()) ;
-    for(int j=0; j<_parameters.dimY(); ++j)
-    {
-        yl[j] = matrix(i, _parameters.dimX() + _parameters.dimY() + j);
-        yu[j] = matrix(i, _parameters.dimX() + 2*_parameters.dimY() + j);
-    }
+    vec x;
+    get(i, x, yl, yu);
 }
 
 vec vertical_segment::get(int i) const
 {
-    return data_view().col(i);
+    return data_view().row(i);
 }
 
 void vertical_segment::set(int i, const vec& x)

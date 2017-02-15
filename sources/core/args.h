@@ -1,7 +1,7 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
    Copyright (C) 2014, 2015 Universtie de Montreal
-   Copyright (C) 2013, 2014 Inria
+   Copyright (C) 2013, 2014, 2017 Inria
 
    This file is part of ALTA.
 
@@ -14,6 +14,7 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <initializer_list>
 #include <cstdlib>
 #include <iostream>
 #include <cctype>
@@ -33,12 +34,20 @@ namespace alta {
  */
 class arguments
 {
+  private:
+    typedef std::pair<const std::string, std::string> pair_type;
+
 	public: // functions
 
 		// Constructor and destructor
 		arguments()
 		{
 		}
+    arguments(std::initializer_list<pair_type> lst)
+        : _map(lst)
+    {
+    }
+
 		arguments(int argc, char** const argv)
     {
       for(int i=0; i<argc; ++i)

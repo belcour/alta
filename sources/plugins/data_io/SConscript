@@ -2,13 +2,17 @@ Import('env', 'openexr_available')
 env = env.Clone()
 
 have_openexr = openexr_available(env)
+if not have_openexr:
+  print "<<ERROR>> Could not locate TinyEXR : EXR related plugins won't be built."
+  print "          Please use `git submodule init` and 'git submodule update` to get TinyEXR."
+
 
 if have_openexr:
   # Make sure we have the 'ImfStdIO.h' header, which OpenEXR 2.2.0
   # does not install:
   # <https://lists.nongnu.org/archive/html/openexr-devel/2016-06/msg00001.html>.
   conf = Configure(env)
-  have_openexr = conf.CheckCXXHeader('ImfStdIO.h')
+  have_openexr = conf.CheckCXXHeader('tinyexr/tinyexr.h')
   conf.Finish()
 
 # Special linking flags, defined in the OS dependant configuration file

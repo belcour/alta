@@ -1,6 +1,6 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
-   Copyright (C) 2015, 2016 Inria
+   Copyright (C) 2015, 2016, 2017 Inria
 
    This file is part of ALTA.
 
@@ -23,6 +23,7 @@
 
 #include <string>
 #include <iostream>
+#include <sstream>
 
 #include <cstring>
 #include <cstdlib>
@@ -36,6 +37,122 @@
 #endif
 
 using namespace alta;
+
+// Try loading a simple example from a text-format stream.
+static void test_simple_load_from_text()
+{
+    static const char example[] = "\
+#DIM 1 3f\n\
+#VS 0\n\
+#PARAM_IN COS_TH\n\
+#PARAM_OUT RGB_COLOR\n\
+0 1 2 3\n\
+4 5 6 7\n\
+8 9 10 11\n";
+
+    std::istringstream input(example);
+
+    auto data = dynamic_pointer_cast<vertical_segment>(
+        plugins_manager::load_data("vertical_segment", input));
+    TEST_ASSERT(data != NULL);
+
+    TEST_ASSERT(data->size() == 3);
+    TEST_ASSERT(data->parametrization().input_parametrization()
+                == params::COS_TH);
+    TEST_ASSERT(data->parametrization().output_parametrization()
+                == params::RGB_COLOR);
+
+    // Currently we always get ASYMMETRICAL_CONFIDENCE_INTERVAL for backward
+    // compatibility reasons.  The default confidence interval is ±0.1.
+    TEST_ASSERT(data->confidence_interval_kind()
+                == vertical_segment::ASYMMETRICAL_CONFIDENCE_INTERVAL);
+
+    TEST_ASSERT(data->get(0) == Eigen::Vector4d(0., 1., 2., 3.));
+    TEST_ASSERT(data->get(1) == Eigen::Vector4d(4., 5., 6., 7.));
+    TEST_ASSERT(data->get(2) == Eigen::Vector4d(8., 9., 10., 11.));
+
+    // Check the result of the other 'get' methods.
+    vec x, y_lower, y_upper;
+    data->get(1, x, y_lower, y_upper);
+    TEST_ASSERT(x == Eigen::VectorXd::Constant(1, 4.));
+    TEST_ASSERT(y_lower == Eigen::Vector3d(4.9, 5.9, 6.9));
+    TEST_ASSERT(y_upper == Eigen::Vector3d(5.1, 6.1, 7.1));
+    data->get(1, y_lower, y_upper);
+    TEST_ASSERT(y_lower == Eigen::Vector3d(4.9, 5.9, 6.9));
+    TEST_ASSERT(y_upper == Eigen::Vector3d(5.1, 6.1, 7.1));
+
+    // The "matrix view" includes confidence interval data.
+    auto view = data->matrix_view();
+    TEST_ASSERT(view.cols() == 1 + 3 + 2 * 3);
+    TEST_ASSERT(view.rows() == 3);
+    TEST_ASSERT(view.col(0) == Eigen::Vector3d(0., 4., 8.));
+    TEST_ASSERT(view.col(1) == Eigen::Vector3d(1., 5., 9.));
+    TEST_ASSERT(view.col(2) == Eigen::Vector3d(2., 6., 10.));
+    TEST_ASSERT(view.col(3) == Eigen::Vector3d(3., 7., 11.));
+}
+
+// Try loading a simple example from a text-format stream, with extra
+// filtering arguments.
+static void test_simple_load_from_text_filtering()
+{
+    static const char example[] = "\
+#DIM 1 3f\n\
+#VS 0\n\
+#PARAM_IN COS_TH\n\
+#PARAM_OUT RGB_COLOR\n\
+0 1 2 3\n\
+1 4 5 6\n\
+2 7 8 9\n\
+3 10 11 12\n\
+4 7 7 7\n";
+
+    std::istringstream input(example);
+
+    // Filter out elements that are not within those boundaries.
+    arguments args =
+        { { "ymin", "4" }, { "ymax", "10" }, { "max", "3" } };
+
+    auto data = dynamic_pointer_cast<vertical_segment>(
+        plugins_manager::load_data("vertical_segment", input, args));
+    TEST_ASSERT(data != NULL);
+
+    // There should be only 2 elements left after filtering.
+    TEST_ASSERT(data->size() == 2);
+
+    TEST_ASSERT(data->get(0) == Eigen::Vector4d(1., 4., 5., 6.));
+    TEST_ASSERT(data->get(1) == Eigen::Vector4d(2., 7., 8., 9.));
+}
+
+// Likewise, but using the vector syntax for boundaries.
+static void test_simple_load_from_text_filtering_vectors()
+{
+    static const char example[] = "\
+#DIM 1 3f\n\
+#VS 0\n\
+#PARAM_IN COS_TH\n\
+#PARAM_OUT RGB_COLOR\n\
+-1 4 4 4\n\
+ 0 1 2 3\n\
+ 1 4 5 6\n\
+ 2 7 8 9\n\
+ 3 10 11 12\n\
+ 4 7 7 7\n";
+
+    std::istringstream input(example);
+
+    arguments args =
+        { { "ymin", "[ 4, 5, 6 ]" }, { "max", "[ 3 ]" } };
+
+    auto data = plugins_manager::load_data("vertical_segment", input, args);
+    TEST_ASSERT(data != NULL);
+
+    // There should be only 3 elements left after filtering.
+    TEST_ASSERT(data->size() == 3);
+
+    TEST_ASSERT(data->get(0) == Eigen::Vector4d(1., 4., 5., 6.));
+    TEST_ASSERT(data->get(1) == Eigen::Vector4d(2., 7., 8., 9.));
+    TEST_ASSERT(data->get(2) == Eigen::Vector4d(3., 10., 11., 12.));
+}
 
 // Files that are automatically deleted upon destruction.
 class temporary_file
@@ -116,6 +233,12 @@ int main(int argc, char** argv)
         input_file = data_dir + "/" + data_file;
     }
 
+    // Simple tests first.
+    test_simple_load_from_text();
+    test_simple_load_from_text_filtering();
+    test_simple_load_from_text_filtering_vectors();
+
+    // Try a sequence of loads and saves.
     try
     {
         std::ifstream input;
@@ -171,6 +294,26 @@ int main(int argc, char** argv)
         // confidence interval on Y.
         TEST_ASSERT(vs_sample1->matrix_view() == vs_sample2->matrix_view());
         TEST_ASSERT(vs_sample1->matrix_view() == vs_sample3->matrix_view());
+
+        auto dimX = sample1->parametrization().dimX();
+        auto dimY = sample1->parametrization().dimY();
+        for (auto i = 0; i < vs_sample1->size(); i++)
+        {
+            vec row = vs_sample1->matrix_view().row(i);
+            vec x = row.segment(0, dimX);
+            vec y = row.segment(dimX, dimY);
+            vec yl = row.segment(dimX + dimY, dimY);
+            vec yu = row.segment(dimX + 2 * dimY, dimY);
+
+            // Make sure the default confidence interval is used.
+            TEST_ASSERT(yl == y - Eigen::VectorXd::Constant(dimY, 0.1));
+            TEST_ASSERT(yu == y + Eigen::VectorXd::Constant(dimY, 0.1));
+
+            // Make sure this is consistent with the 'get' method.
+            vec x2, yl2, yu2;
+            vs_sample1->get(i, x2, yl2, yu2);
+            TEST_ASSERT(x2 == x && yl2 == yl && yu2 == yu);
+        }
     }
     CATCH_FILE_IO_ERROR(input_file);
 

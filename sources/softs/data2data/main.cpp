@@ -169,23 +169,46 @@ int main(int argc, char** argv)
 	{
 		std::cout << "<<INFO>> output DIM = " << d_out->parametrization().dimX() << ", " << d_out->parametrization().dimY() << std::endl;
 
+    std::cout << " d_in->parametrization().input_parametrization(), = " << params::get_name(d_in->parametrization().input_parametrization() ) << std::endl;
+    std::cout << " d_in->parametrization().output_parametrization(), = " << params::get_name( d_in->parametrization().output_parametrization() ) << std::endl;
+    std::cout << " d_out->parametrization().dimY() = " << d_out->parametrization().dimY() << std::endl;
+    std::cout << "d_out->parametrization().output_parametrization() = " << params::get_name( d_out->parametrization().output_parametrization() ) << std::endl;
+    std::cout << " d_out->parametrization().input_parametrization(), = " << params::get_name( d_out->parametrization().input_parametrization() ) << std::endl;
+
+    unsigned int nb_invalid_configs = 0;
 		vec temp(d_out->parametrization().dimX() + d_out->parametrization().dimY());
 		for(int i=0; i<d_in->size(); ++i)
 		{
+
 			// Copy the input vector
 			vec x = d_in->get(i);
 			params::convert(&x[0],
                       d_in->parametrization().input_parametrization(),
                       d_out->parametrization().input_parametrization(),
                       &temp[0]);
-			params::convert(&x[d_in->parametrization().dimX()],
-                      d_in->parametrization().output_parametrization(),
-                      d_in->parametrization().dimY(),
-                      d_out->parametrization().output_parametrization(),
-                      d_out->parametrization().dimY(),
-                      &temp[d_out->parametrization().dimX()]);
-			d_out->set(i, temp);
+      
+      // Check if this  BRDF parametrization is valid (over the hemisphere)
+      if( params::is_below_hemisphere( &temp[0], d_out->parametrization().input_parametrization()  ) )
+      {
+        nb_invalid_configs++;
+      }
+      else // Apply the conversion
+      {
+        params::convert(&x[d_in->parametrization().dimX()],
+                        d_in->parametrization().output_parametrization(),
+                        d_in->parametrization().dimY(),
+                        d_out->parametrization().output_parametrization(),
+                        d_out->parametrization().dimY(),
+                        &temp[d_out->parametrization().dimX()]);
+        d_out->set(i, temp);
+      }
 		}
+
+    if( nb_invalid_configs > 0 )
+    {
+      std::cout << " nb_invalid_configs = " << nb_invalid_configs << " over " << d_in->size() << " configs" << std::endl;
+    }
+
 	}
 	else
 	{
@@ -227,7 +250,7 @@ int main(int argc, char** argv)
                         &temp[0]);
 				y = d_in->value(temp);
 			} else {
-            ++stats_incorrect;
+        ++stats_incorrect;
 				y.setZero();
 			}
 
@@ -247,6 +270,7 @@ int main(int argc, char** argv)
                    << stats_incorrect << " / " << d_out->size() << std::endl;
       }
 	}
+
 	d_out->save(args["output"]);
 	return 0 ;
 }

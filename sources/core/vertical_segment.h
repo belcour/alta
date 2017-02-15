@@ -1,6 +1,6 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
-   Copyright (C) 2013, 2014, 2015, 2016 Inria
+   Copyright (C) 2013, 2014, 2015, 2016, 2017 Inria
 
    This file is part of ALTA.
 
@@ -164,20 +164,19 @@ class vertical_segment : public data
       // Thus, it has (dimX + dimY + N * dimY) columns, where N is between 0
       // and 2 depending on the confidence interval data available, and SIZE
       // rows.
-      Eigen::Map<Eigen::MatrixXd> matrix_view() const
+      Eigen::Map<RowMatrixXd> matrix_view() const
       {
-          return Eigen::Map<Eigen::MatrixXd>(_data.get(), size(),
-                                             column_number());
+          return Eigen::Map<RowMatrixXd>(_data.get(), size(), column_number());
       }
 
    private: // method
 
       //! \brief Return a matrix view of DATA that excludes confidence
       // interval data.  It has (dimX + dimY) columns and SIZE rows.
-      Eigen::Map<Eigen::MatrixXd, 0, Eigen::OuterStride<> > data_view() const
+      Eigen::Map<RowMatrixXd, 0, Eigen::OuterStride<> > data_view() const
       {
-          return Eigen::Map<Eigen::MatrixXd, 0, Eigen::OuterStride<> >
-              (_data.get(), _parameters.dimX() + _parameters.dimY(), size(),
+          return Eigen::Map<RowMatrixXd, 0, Eigen::OuterStride<> >
+              (_data.get(), _size, _parameters.dimX() + _parameters.dimY(),
                Eigen::OuterStride<>(column_number()));
       }
 

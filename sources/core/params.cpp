@@ -831,3 +831,21 @@ void params::print_input_params()
 		std::cout << it->second.info << std::endl;
 	}
 }
+
+
+bool 
+params::is_above_hemisphere( double* const invec, params::input in_param_type )
+{
+	vec input_in_cartesian(6);
+
+	params::convert(invec, in_param_type, params::CARTESIAN, &input_in_cartesian[0]);
+
+	return input_in_cartesian[2] >= 0.0  && input_in_cartesian[5] >= 0.0;
+
+}
+
+
+
+
+
+
