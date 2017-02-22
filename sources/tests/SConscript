@@ -201,6 +201,26 @@ if 'python' in COMMAND_LINE_TARGETS:
    for test in PYTHON_TESTS:
       make_test_python(test)
 
+# Test Some basic conversion 
+cmd00 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD', 
+                                        '--input', test_byproduct('gold-metallic-paint.binary'),
+                                        '--in-data', 'data_merl',
+                                        '--output', test_byproduct('gold-metallic-paint.alta'),
+                                        '--all-values'],
+                          'merl-to-alta-all-values')
+AlwaysBuild(cmd00)
+env.Alias('tests',cmd00)
+
+cmd01 = make_command_test('data2data', ['--input', test_byproduct('gold-metallic-paint.alta'),
+                                         '--output', test_byproduct('gold-metallic-paint_positive_only.alta'),
+                                         '--all-values', '--param RUSIN_TH_TD_PD', '--ymin [0.0, 0.0, 0.0]'],
+                          'alta-to-alta-positive-values-only')
+
+env.Depends(cmd01,cmd00)
+AlwaysBuild(cmd01)
+env.Alias('tests',cmd01)
+
+
 # Make sure commands from the tutorials actually work.
 
 cmd1 = make_command_test('data2brdf', [ '--input', test_file, '--output',
