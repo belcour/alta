@@ -209,6 +209,13 @@ int main(int argc, char** argv)
 
         if( args.is_defined("all-values")) // If the user wants to save invalid values as well
         {
+          // Converts the output values from vector x to the output values of temp vector
+          params::convert(&x[d_in->parametrization().dimX()],
+                          d_in->parametrization().output_parametrization(),
+                          d_in->parametrization().dimY(),
+                          d_out->parametrization().output_parametrization(),
+                          d_out->parametrization().dimY(),
+                          &temp[d_out->parametrization().dimX()]);
           // SAVING THE INVALID CONFIGURATION
           d_out->set(i, temp);
         }
@@ -247,7 +254,7 @@ int main(int argc, char** argv)
 			std::cerr << "            This is currently not handled properly by ALTA." << std::endl;
 		}
 
-      unsigned int stats_incorrect = 0;
+    unsigned int stats_incorrect = 0;
 
 		#pragma omp parallel for
 		for(int i=0; i<d_out->size(); ++i)
