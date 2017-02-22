@@ -1,6 +1,6 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
-   Copyright (C) 2014 CNRS
+   Copyright (C) 2014, 2017 CNRS
    Copyright (C) 2013, 2014, 2015, 2016 Inria
 
    This file is part of ALTA.
@@ -76,9 +76,14 @@ static parameters compute_parameters(const data& d_in,
         exit(EXIT_FAILURE);
     }
 
+    // Check the output parametrization
+    // For now we propagate OUTPUT_PARAM since there isn't any way to do conversion
+    params::output const & out_param = d_in.parametrization().output_parametrization();
+
     return alta::parameters(params::dimension(param),
                             d_in.parametrization().dimY(),
-                            param, params::UNKNOWN_OUTPUT);
+                            param,
+                            out_param);
 }
 
 int main(int argc, char** argv)
@@ -106,10 +111,12 @@ int main(int argc, char** argv)
 		std::cout << "                         parametrizations." << std::endl ;
 		std::cout << "  --data-correct-cosine  Divide the value of the data points by the product of" << std::endl;
 		std::cout << "                         the light and view vector dot product with the normal." << std::endl ;
+    std::cout << "   --all-values          Export all data regardless of their physical validity." << std::endl;
 		std::cout << std::endl;
 		std::cout << "Helps:" << std::endl;
 		std::cout << "  --help                 Display this help." << std::endl;
 		std::cout << "  --help-params          Display the available input parametrizations." << std::endl;
+    std::cout << "  --verbose              Enable more information output. Helpful to debug." << std::endl;
 		return EXIT_SUCCESS;
 	}
 	if(args.is_defined("help-params")) {
@@ -166,13 +173,13 @@ int main(int argc, char** argv)
   std::cout << "<<INFO>> Conversion from " << params::get_name(d_in->parametrization().input_parametrization())
            << " to " << params::get_name(d_out->parametrization().input_parametrization()) << std::endl;
 
-  std::cout << "<<INFO>> Input  Dimensions for [X,Y] = " << d_in->parametrization().dimX()
+  std::cout << "<<INFO>> Dimensions for  Input Data [X,Y] = " << d_in->parametrization().dimX()
             << ", " << d_in->parametrization().dimY() << std::endl;
 
 
 	if(dynamic_pointer_cast<vertical_segment>(d_out) || args.is_defined("splat"))
 	{
-		std::cout << "<<INFO>> Output Dimensions for [X,Y] = " << d_out->parametrization().dimX() << ", " << d_out->parametrization().dimY() << std::endl;
+		std::cout << "<<INFO>> Dimensions for Output Data [X,Y] = " << d_out->parametrization().dimX() << ", " << d_out->parametrization().dimY() << std::endl;
 
     if(args.is_defined("verbose"))
     {
@@ -194,10 +201,18 @@ int main(int argc, char** argv)
                       d_out->parametrization().input_parametrization(),
                       &temp[0]);
       
+      // Todo change this at some point because we cannot handle BTDF stuff here
       // Check if this  BRDF parametrization is valid (over the hemisphere)
       if( params::is_below_hemisphere( &temp[0], d_out->parametrization().input_parametrization()  ) )
       {
         nb_invalid_configs++;
+
+        if( args.is_defined("all-values")) // If the user wants to save invalid values as well
+        {
+          // SAVING THE INVALID CONFIGURATION
+          d_out->set(i, temp);
+        }
+
       }
       else // Apply the conversion
       {
@@ -213,7 +228,7 @@ int main(int argc, char** argv)
 
     if( nb_invalid_configs > 0 )
     {
-      std::cout << "<<INFO>> nb_invalid_configs = " << nb_invalid_configs << " over " << d_in->size() << " configs" << std::endl;
+      std::cout << "<<INFO>> Number of Invalid Configurations = " << nb_invalid_configs << " over " << d_in->size() << " configurations" << std::endl;
     }
 
 	}
