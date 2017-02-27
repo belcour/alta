@@ -412,6 +412,10 @@ class arguments
 			  }
 #ifdef DEBUG_ARGS
 			  std::cout << "]" << std::endl;
+        for( int i=0; i < cmd_vec.size(); i++)
+        {
+          std::cout << " cmd_vec[" << i << "]=" << cmd_vec[i] << std::endl;
+        }
 #endif
 
 			  int argc = cmd_vec.size();
