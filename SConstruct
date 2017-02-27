@@ -190,6 +190,14 @@ def library_available(env, pkgspec='', lib='', header='',
   conf.Finish()
   return result
 
+def catch_available(env):
+  """Return True if Catch is available."""
+  env.AppendUnique(CPPPATH = '#external')
+  conf = Configure(env)
+  has_catch = conf.CheckCXXHeader('Catch/single_include/catch.hpp')
+  conf.Finish()
+  return has_catch
+
 def openexr_available(env):
    """Return True if OpenEXR is available."""
    env.AppendUnique(CPPPATH = '#external')
@@ -277,7 +285,7 @@ int main(int argc, char* argv[]) {
   return has_cxx11
 
 # Export these for use in SConscripts.
-Export('CheckPKG', 'library_available', 'openexr_available')
+Export('CheckPKG', 'library_available', 'openexr_available', 'catch_available')
 
 conf = Configure(env, custom_tests = { 'CheckOpenMP': CheckOpenMP,
                                        'CheckCXX11' : CheckCXX11 })
