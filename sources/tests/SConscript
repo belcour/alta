@@ -4,9 +4,10 @@ from os.path import basename, splitext
 
 import obtain
 
-Import('env', 'ALTA_LIBS', 'openexr_available')
+Import('env', 'ALTA_LIBS', 'openexr_available', 'catch_available')
 env = env.Clone()
 
+have_catch = catch_available(env)
 have_openexr = openexr_available(env)
 conf = Configure(env)
 have_cppquickcheck = conf.CheckLibWithHeader('cppqc', 'cppqc.h', 'C++')
@@ -201,25 +202,6 @@ if 'python' in COMMAND_LINE_TARGETS:
    for test in PYTHON_TESTS:
       make_test_python(test)
 
-# Test Some basic conversion 
-cmd00 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD', 
-                                        '--input', test_byproduct('gold-metallic-paint.binary'),
-                                        '--in-data', 'data_merl',
-                                        '--output', test_byproduct('gold-metallic-paint.alta'),
-                                        '--all-values'],
-                          'merl-to-alta-all-values')
-AlwaysBuild(cmd00)
-env.Alias('tests',cmd00)
-
-cmd01 = make_command_test('data2data', ['--input', test_byproduct('gold-metallic-paint.alta'),
-                                         '--output', test_byproduct('gold-metallic-paint_positive_only.alta'),
-                                         '--all-values', '--param RUSIN_TH_TD_PD', '--ymin [0.0, 0.0, 0.0]'],
-                          'alta-to-alta-positive-values-only')
-
-env.Depends(cmd01,cmd00)
-AlwaysBuild(cmd01)
-env.Alias('tests',cmd01)
-
 
 # Make sure commands from the tutorials actually work.
 
@@ -291,6 +273,41 @@ downloadKrylon = env.Command(test_output_directory + '/krylon_blue_RGB.astm',
 # takes ages.
 downloadGold.noclean   = True
 downloadKrylon.noclean = True
+
+
+# Test Some basic conversion from MERL to ALTA ... 
+cmd00 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD', 
+                                        '--input', test_byproduct('gold-metallic-paint.binary'),
+                                        '--in-data', 'data_merl',
+                                        '--output', test_byproduct('gold-metallic-paint.alta'),
+                                        '--all-values'],
+                          'merl-to-alta-all-values')
+
+env.Depends(cmd00, downloadGold)
+AlwaysBuild(cmd00)
+env.Alias('tests',cmd00)
+
+# ... and from ALTA to ALTA using filtering
+cmd01 = make_command_test('data2data', ['--input', test_byproduct('gold-metallic-paint.alta'),
+                                         '--output', test_byproduct('gold-metallic-paint_positive_only.alta'),
+                                         '--all-values', '--param RUSIN_TH_TD_PD', '--ymin [0.0, 0.0, 0.0]'],
+                          'alta-to-alta-positive-values-only')
+
+env.Depends(cmd01,cmd00)
+AlwaysBuild(cmd01)
+env.Alias('tests',cmd01)
+
+# ADD C++ Test if the two previous tests have passed and if Catch submodule is available
+if have_catch:
+  CXX_CATCH_TESTS = ['core/conversion-catch-1.cpp']
+  env.AppendUnique(CPPPATH = ['#external/Catch/single_include/'])
+
+  for test in CXX_CATCH_TESTS:
+    make_cxx_test_alias(test)
+  #end_for_loop
+
+#end_if_have_catch
+
 
 if have_openexr:
   cmd5 = make_command_test('data2data',
