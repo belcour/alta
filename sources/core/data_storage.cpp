@@ -186,6 +186,8 @@ alta::data* alta::load_data_from_text(std::istream& input,
   auto kind = ci_kind_from_number(header.get_int("VS"));
   std::vector<double> content;
 
+  std::cout << "<<INFO>> Starting to load file ... " << std::endl;
+
   // Now read the body.
   while(input.good())
   {
@@ -238,10 +240,11 @@ alta::data* alta::load_data_from_text(std::istream& input,
   }
 
   std::cout << "<<INFO>> loaded input stream" << std::endl ;
-  std::cout << "<<INFO>> loading data input of R^"
+  std::cout << "<<INFO>> loaded data input of R^"
             << dim.first
             << " -> R^" << dim.second << std::endl ;
-  std::cout << "<<INFO>> " << content.size() << " elements to fit" << std::endl ;
+
+  std::cout << "<<DEBUG>> " << content.size() << " double loaded. " << std::endl ;
 
 
   double *raw_content = new double[content.size()];
@@ -254,6 +257,8 @@ alta::data* alta::load_data_from_text(std::istream& input,
                                                                             delete_array));
   if(args.is_defined("data-correct-cosine"))
       result->save("/tmp/data-corrected.dat");
+
+  std::cout << "<<INFO>> " << element_count << " elements (rows) loaded" << std::endl ;
 
   return result;
 }
