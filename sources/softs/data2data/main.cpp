@@ -145,7 +145,13 @@ int main(int argc, char** argv)
 
 	try
 	{
+      alta::timer load_timer;
+      load_timer.start();
+
       d_in = plugins_manager::load_data(args["input"], args["in-data"], args) ;
+
+      load_timer.stop();
+      std::cout << "<<INFO>> Data Loaded in "<< load_timer << std::endl;
 	}
 	CATCH_FILE_IO_ERROR(args["input"]);
 
@@ -153,6 +159,7 @@ int main(int argc, char** argv)
 	{
 		std::cout << "<<INFO>> Input data will be treated as ALTA format" << std::endl;
 	}
+
 
 	ptr<data> d_out = plugins_manager::get_data(args["out-data"],
                                               d_in->size(),
@@ -188,6 +195,9 @@ int main(int argc, char** argv)
       std::cout << "<<DEBUG>> d_out->parametrization().input_parametrization(), = " << params::get_name( d_out->parametrization().input_parametrization() ) << std::endl;
       std::cout << "<<DEBUG>> d_out->parametrization().output_parametrization() = " << params::get_name( d_out->parametrization().output_parametrization() ) << std::endl;
     }
+    
+    alta::timer save_timer;
+    save_timer.start();
 
     unsigned int nb_invalid_configs = 0;
 		vec temp(d_out->parametrization().dimX() + d_out->parametrization().dimY());
@@ -232,11 +242,14 @@ int main(int argc, char** argv)
         d_out->set(i, temp);
       }
 		}
+    save_timer.stop();
 
     if( nb_invalid_configs > 0 )
     {
       std::cout << "<<INFO>> Number of Invalid Configurations = " << nb_invalid_configs << " over " << d_in->size() << " configurations" << std::endl;
     }
+
+    std::cout << "<<INFO>> Data saved to file in "<< save_timer << std::endl;
 
 	}
 	else
