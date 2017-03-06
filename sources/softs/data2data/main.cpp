@@ -15,11 +15,11 @@
  *  This command transform a \ref data object into another data object.
  *  \details
  *  This command is useful to change the parametrization of a data file,
- *  or to perform interpolation of sample values (i.e. to fill gaps).
+ *  or to perform interpolation of sample values (i.e., to fill gaps).
  *
  *  <h3>Usage</h3>
  *  \verbatim
-       data2data --input data.file --output data.file --out-data exporter.so --in-data importer.so
+       data2data --input data.file --output data.file --out-data  output_plugin --in-data input_plugin  OPTIONS
     \endverbatim
  *
  *  <h3>Parameters</h3>
@@ -28,18 +28,67 @@
  *		loading plugin is defined using the option <b>\-\-in-data <i>
  *		filename</i></b>.
  *		</li>
- *		<li><b>\-\-in-data <i>filename</i></b> specify the data plugin
+ *		<li><b>\-\-in-data <i>filename</i></b> specifies the data plugin (cf. \ref datas)
  *		used to load the input file. If this option is not specified, the
- *		loading plugin will be a \ref vertical_segment plugin. \note If
- *		the input plugin is not interpolating, like \ref vertical_segment,
+ *		loading plugin will be a \ref alta::vertical_segment plugin. \note If
+ *		the input plugin is not interpolating, like \ref alta::vertical_segment,
  *		you can only use the reparametrization tool.</li>
  *		<li><b>\-\-output <i>filename</i></b> the resulting data file.
  *		</li>
- *		<li><b>\-\-out-data <i>filename</i></b></li> specify the data plugin
+ *		<li><b>\-\-out-data <i>filename</i></b></li> specifies the data plugin
  *		used to export the data. This parameter is optional. If not defined,
  *		the output format will be ALTA's \ref format.
  *		</li>
  *  </ul>
+ *  <h3>Options</h3>
+ *  <ul>
+ *    <li>
+ *      <b>--params <i>NAME</i> </b> specifies the name of the parametrization to be used
+ *               no output data plugin is specified.
+ *               Please see --help-params for the list of available parametrizations.
+ *    </li>
+ *
+ *    <li>
+ *      <b>--all-values </b> exports all data regardless of their physical validity
+ *    </li>
+ *
+ *    <li>
+ *      <b>--data-correct-cosine</b> divides the value of the data points by the product of
+ *       the light and view vector dot product with the normal
+ *    </li>
+ *   </ul>
+ *
+ * <h4>Data Filtering  (currently only supported with ALTA format) </h4>
+ *  <ul>
+ *    <li>
+ *      <b>--min [min_1, min_2, ...] </b> discards all samples which input values are lower than min_1, min_2,...
+ *    </li>
+ *    <li>
+ *      <b>--max  [max_1, max_2, ...] </b> discards all samples which input values are greater than max_1, max_2,...
+ *    </li>
+ *    <li>
+ *      <b>--ymin [ymin_1, ymin_2, ...] </b> discards all samples which output values are lower than min_1, min_2,...
+ *    </li>
+ *    <li>
+ *      <b> --ymax [ymax_1, ymax_2, ...] </b> discards all samples which ouptut values are greater than max_1, max_2,...
+ *    </li>
+ *
+ *  </ul>
+ *
+ *  <h3>Usage Examples</h3>
+ *    <h4> Converting from MERL to plain text ALTA file format </h4>
+ *      \verbatim
+        data2data   --in-data data_merl --input gold-metallic-paint.binary --output gold-metallic-paint.alta  --param RUSIN_TH_TD_PD  --all-values
+        \endverbatim
+ *    <h4> Converting from ALTA to ALTA format by keeping only positive values</h4>
+ *      \verbatim
+       data2data  --input gold-metallic-paint_all_values.alta --output gold-metallic-paint_only_valid.alta  --param RUSIN_TH_TD_PD  --ymin [0.0, 0.0, 0.0]
+        \endverbatim
+ *    <h4> Filtering on input dimensions. </h4>
+ *      \verbatim
+        data2data  --input gold-metallic-paint_only_valid.alta  --output gold-metallic-paint_filtered_tH.alta  --param RUSIN_TH_TD_PD  --max [1.5, 0.01, 0.01]
+        \endverbatim
+ *
  */
 #include <core/args.h>
 #include <core/data.h>
