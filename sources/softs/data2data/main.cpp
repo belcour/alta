@@ -136,6 +136,157 @@ static parameters compute_parameters(const data& d_in,
                             out_param);
 }
 
+// Convert D_IN to D_OUT without doing any interpolation.  That is, call the
+// 'get' method of D_IN to grab its 'x' and 'y' values, and write those to
+// D_OUT.  When ALL_VALUES is true, disable filtering of values that are not
+// in the definition domain.
+static void convert_vertical_segment(ptr<data> d_in, ptr<data> d_out,
+                                     bool verbose = false,
+                                     bool all_values = false)
+{
+    std::cout << "<<INFO>> Dimensions for Output Data [X,Y] = " << d_out->parametrization().dimX() << ", " << d_out->parametrization().dimY() << std::endl;
+
+    if (verbose)
+    {
+        std::cout << "<<DEBUG>> d_in->parametrization().input_parametrization(), = " << params::get_name(d_in->parametrization().input_parametrization() ) << std::endl;
+        std::cout << "<<DEBUG>> d_in->parametrization().output_parametrization(), = " << params::get_name( d_in->parametrization().output_parametrization() ) << std::endl;
+        std::cout << "<<DEBUG>> d_out->parametrization().input_parametrization(), = " << params::get_name( d_out->parametrization().input_parametrization() ) << std::endl;
+        std::cout << "<<DEBUG>> d_out->parametrization().output_parametrization() = " << params::get_name( d_out->parametrization().output_parametrization() ) << std::endl;
+    }
+
+    alta::timer save_timer;
+    save_timer.start();
+
+    unsigned int nb_invalid_configs = 0;
+    vec temp(d_out->parametrization().dimX() + d_out->parametrization().dimY());
+    for(int i=0; i<d_in->size(); ++i)
+    {
+
+        // Copy the input vector
+        vec x = d_in->get(i);
+        params::convert(&x[0],
+                        d_in->parametrization().input_parametrization(),
+                        d_out->parametrization().input_parametrization(),
+                        &temp[0]);
+
+        // TODO: Change this at some point because we cannot handle BTDF stuff here
+        // Check if this  BRDF parametrization is valid (over the hemisphere)
+        if( params::is_below_hemisphere( &temp[0], d_out->parametrization().input_parametrization()  ) )
+        {
+            nb_invalid_configs++;
+
+            if (all_values) // If the user wants to save invalid values as well
+            {
+                // Converts the output values from vector x to the output values of temp vector
+                params::convert(&x[d_in->parametrization().dimX()],
+                                d_in->parametrization().output_parametrization(),
+                                d_in->parametrization().dimY(),
+                                d_out->parametrization().output_parametrization(),
+                                d_out->parametrization().dimY(),
+                                &temp[d_out->parametrization().dimX()]);
+                // SAVING THE INVALID CONFIGURATION
+                d_out->set(i, temp);
+            }
+
+        }
+        else // Apply the conversion
+        {
+            params::convert(&x[d_in->parametrization().dimX()],
+                            d_in->parametrization().output_parametrization(),
+                            d_in->parametrization().dimY(),
+                            d_out->parametrization().output_parametrization(),
+                            d_out->parametrization().dimY(),
+                            &temp[d_out->parametrization().dimX()]);
+            d_out->set(i, temp);
+        }
+    }
+    save_timer.stop();
+
+    if( nb_invalid_configs > 0 )
+    {
+        std::cout << "<<INFO>> Number of Invalid Configurations = " << nb_invalid_configs << " over " << d_in->size() << " configurations" << std::endl;
+    }
+
+    std::cout << "<<INFO>> Data saved to file in "<< save_timer << std::endl;
+
+}
+
+// Convert D_IN to D_OUT, possibly interpolating the value in D_IN using the
+// 'value' method of D_IN.  Assume that D_OUT has its 'x' values already
+// initialized, and provide the interpolated 'y' value that correspond.
+static void convert_with_interpolation(ptr<data> d_in, ptr<data> d_out)
+{
+		if(d_out->parametrization().output_parametrization() != d_in->parametrization().output_parametrization())
+		{
+        std::cerr << "<<WARNING>> data types have different output parametrizations." << std::endl;
+        std::cerr << "            This is currently not handled properly by ALTA." << std::endl;
+		}
+
+		if(d_out->parametrization().dimY() != d_in->parametrization().dimY())
+		{
+        std::cerr << "<<WARNING>> data types have different output dimensions (" << d_in->parametrization().dimY()
+                  << " and " << d_out->parametrization().dimY() << ")." << std::endl;
+        std::cerr << "            This is currently not handled properly by ALTA." << std::endl;
+		}
+
+    unsigned int stats_incorrect = 0;
+
+#pragma omp parallel for
+		for(int i=0; i<d_out->size(); ++i)
+		{
+        vec temp(d_in->parametrization().dimX());
+        vec cart(6);
+        vec y(d_in->parametrization().dimY());
+
+        // Copy the input vector
+        vec x = d_out->get(i);
+        params::convert(&x[0],
+                        d_out->parametrization().input_parametrization(),
+                        params::CARTESIAN, &cart[0]);
+
+
+        // Check if the output configuration is below the hemisphere when
+        // converted to cartesian coordinates. Note that this prevent from
+        // converting BTDF data.
+        if(cart[2] >= 0.0 || cart[5] >= 0.0) {
+            params::convert(&cart[0], params::CARTESIAN,
+                            d_in->parametrization().input_parametrization(),
+                            &temp[0]);
+            y = d_in->value(temp);
+        } else {
+            ++stats_incorrect;
+            y.setZero();
+        }
+
+        // Convert the value stored in the input data in the value format of
+        // the output data file.
+        params::convert(&y[0],
+                        d_in->parametrization().output_parametrization(),
+                        d_in->parametrization().dimY(),
+                        d_out->parametrization().output_parametrization(), d_out->parametrization().dimY(),
+                        &x[d_out->parametrization().dimX()]);
+
+        d_out->set(i, x);
+		}
+
+    if(stats_incorrect > 0) {
+        std::cerr << "<<DEBUG>> Number of incorrect configuration: "
+                  << stats_incorrect << " / " << d_out->size() << std::endl;
+    }
+}
+
+// Convert D_IN to D_OUT according to ARGS.
+static void convert(ptr<data> d_in, ptr<data> d_out, const arguments& args)
+{
+	if(dynamic_pointer_cast<vertical_segment>(d_out) || args.is_defined("splat"))
+      convert_vertical_segment(d_in, d_out,
+                               args.is_defined("verbose"),
+                               args.is_defined("all-values"));
+	else
+      convert_with_interpolation(d_in, d_out);
+}
+
+
 int main(int argc, char** argv)
 {
 	arguments args(argc, argv) ;
@@ -240,135 +391,7 @@ int main(int argc, char** argv)
   std::cout << "<<INFO>> Dimensions for  Input Data [X,Y] = " << d_in->parametrization().dimX()
             << ", " << d_in->parametrization().dimY() << std::endl;
 
-
-	if(dynamic_pointer_cast<vertical_segment>(d_out) || args.is_defined("splat"))
-	{
-		std::cout << "<<INFO>> Dimensions for Output Data [X,Y] = " << d_out->parametrization().dimX() << ", " << d_out->parametrization().dimY() << std::endl;
-
-    if(args.is_defined("verbose"))
-    {
-      std::cout << "<<DEBUG>> d_in->parametrization().input_parametrization(), = " << params::get_name(d_in->parametrization().input_parametrization() ) << std::endl;
-      std::cout << "<<DEBUG>> d_in->parametrization().output_parametrization(), = " << params::get_name( d_in->parametrization().output_parametrization() ) << std::endl;
-      std::cout << "<<DEBUG>> d_out->parametrization().input_parametrization(), = " << params::get_name( d_out->parametrization().input_parametrization() ) << std::endl;
-      std::cout << "<<DEBUG>> d_out->parametrization().output_parametrization() = " << params::get_name( d_out->parametrization().output_parametrization() ) << std::endl;
-    }
-    
-    alta::timer save_timer;
-    save_timer.start();
-
-    unsigned int nb_invalid_configs = 0;
-		vec temp(d_out->parametrization().dimX() + d_out->parametrization().dimY());
-		for(int i=0; i<d_in->size(); ++i)
-		{
-
-			// Copy the input vector
-			vec x = d_in->get(i);
-			params::convert(&x[0],
-                      d_in->parametrization().input_parametrization(),
-                      d_out->parametrization().input_parametrization(),
-                      &temp[0]);
-      
-      // Todo change this at some point because we cannot handle BTDF stuff here
-      // Check if this  BRDF parametrization is valid (over the hemisphere)
-      if( params::is_below_hemisphere( &temp[0], d_out->parametrization().input_parametrization()  ) )
-      {
-        nb_invalid_configs++;
-
-        if( args.is_defined("all-values")) // If the user wants to save invalid values as well
-        {
-          // Converts the output values from vector x to the output values of temp vector
-          params::convert(&x[d_in->parametrization().dimX()],
-                          d_in->parametrization().output_parametrization(),
-                          d_in->parametrization().dimY(),
-                          d_out->parametrization().output_parametrization(),
-                          d_out->parametrization().dimY(),
-                          &temp[d_out->parametrization().dimX()]);
-          // SAVING THE INVALID CONFIGURATION
-          d_out->set(i, temp);
-        }
-
-      }
-      else // Apply the conversion
-      {
-        params::convert(&x[d_in->parametrization().dimX()],
-                        d_in->parametrization().output_parametrization(),
-                        d_in->parametrization().dimY(),
-                        d_out->parametrization().output_parametrization(),
-                        d_out->parametrization().dimY(),
-                        &temp[d_out->parametrization().dimX()]);
-        d_out->set(i, temp);
-      }
-		}
-    save_timer.stop();
-
-    if( nb_invalid_configs > 0 )
-    {
-      std::cout << "<<INFO>> Number of Invalid Configurations = " << nb_invalid_configs << " over " << d_in->size() << " configurations" << std::endl;
-    }
-
-    std::cout << "<<INFO>> Data saved to file in "<< save_timer << std::endl;
-
-	}
-	else
-	{
-		if(d_out->parametrization().output_parametrization() != d_in->parametrization().output_parametrization())
-		{
-			std::cerr << "<<WARNING>> data types have different output parametrizations." << std::endl;
-			std::cerr << "            This is currently not handled properly by ALTA." << std::endl;
-		}
-
-		if(d_out->parametrization().dimY() != d_in->parametrization().dimY())
-		{
-			std::cerr << "<<WARNING>> data types have different output dimensions (" << d_in->parametrization().dimY()
-			          << " and " << d_out->parametrization().dimY() << ")." << std::endl;
-			std::cerr << "            This is currently not handled properly by ALTA." << std::endl;
-		}
-
-    unsigned int stats_incorrect = 0;
-
-		#pragma omp parallel for
-		for(int i=0; i<d_out->size(); ++i)
-		{
-			vec temp(d_in->parametrization().dimX());
-			vec cart(6);
-			vec y(d_in->parametrization().dimY());
-
-			// Copy the input vector
-			vec x = d_out->get(i);
-			params::convert(&x[0],
-                      d_out->parametrization().input_parametrization(),
-                      params::CARTESIAN, &cart[0]);
-
-
-         // Check if the output configuration is below the hemisphere when
-         // converted to cartesian coordinates. Note that this prevent from
-         // converting BTDF data.
-			if(cart[2] >= 0.0 || cart[5] >= 0.0) {
-				params::convert(&cart[0], params::CARTESIAN,
-                        d_in->parametrization().input_parametrization(),
-                        &temp[0]);
-				y = d_in->value(temp);
-			} else {
-        ++stats_incorrect;
-				y.setZero();
-			}
-
-         // Convert the value stored in the input data in the value format of
-         // the output data file.
-			params::convert(&y[0],
-                      d_in->parametrization().output_parametrization(),
-                      d_in->parametrization().dimY(),
-                      d_out->parametrization().output_parametrization(), d_out->parametrization().dimY(),
-                      &x[d_out->parametrization().dimX()]);
-
-			d_out->set(i, x);
-		}
-
-      if(stats_incorrect > 0) {
-         std::cerr << "<<DEBUG>> Number of incorrect configuration: "
-                   << stats_incorrect << " / " << d_out->size() << std::endl;
-      }
-	}
+  convert(d_in, d_out, args);
 
   // Special-case ALTA's binary output format.  TODO: In the future, 'save'
   // should no longer be a method and we'd have an output format lookup
