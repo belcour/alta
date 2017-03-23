@@ -1,7 +1,7 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
    Copyright (C) 2014, 2017 CNRS
-   Copyright (C) 2013, 2014, 2015, 2016 Inria
+   Copyright (C) 2013, 2014, 2015, 2016, 2017 Inria
 
    This file is part of ALTA.
 
@@ -92,6 +92,7 @@
  */
 #include <core/args.h>
 #include <core/data.h>
+#include <core/data_storage.h>
 #include <core/params.h>
 #include <core/function.h>
 #include <core/fitter.h>
@@ -150,7 +151,8 @@ int main(int argc, char** argv)
 		std::cout << "Optional arguments:" << std::endl;
 		std::cout << "  --out-data [filename]  Name of the plugin used to save the outputed data file" << std::endl ;
     std::cout << "                         If none is provided, data2data will export in ALTA" << std::endl ;
-		std::cout << "                         by default." << std::endl ;
+		std::cout << "                         by default.  The name \"alta-binary\" specifies ALTA's" << std::endl ;
+		std::cout << "                         native binary format." << std::endl;
 		std::cout << "  --in-data  [filename]  Name of the plugin used to load the input data file" << std::endl ;
     std::cout << "                         If none is provided, data2data will import in ALTA" << std::endl ;
 		std::cout << "                         by default." << std::endl ;
@@ -210,7 +212,13 @@ int main(int argc, char** argv)
 	}
 
 
-	ptr<data> d_out = plugins_manager::get_data(args["out-data"],
+  // "alta-binary" denotes an output format but not a class, so we need to
+  // special-case it.
+  const std::string data_class =
+      args["out-data"] == "alta-binary"
+      ? "vertical_segment" : args["out-data"];
+
+  ptr<data> d_out = plugins_manager::get_data(data_class,
                                               d_in->size(),
                                               compute_parameters(*d_in, args),
                                               args) ;
@@ -362,6 +370,22 @@ int main(int argc, char** argv)
       }
 	}
 
-	d_out->save(args["output"]);
+  // Special-case ALTA's binary output format.  TODO: In the future, 'save'
+  // should no longer be a method and we'd have an output format lookup
+  // function in plugin_manager.
+  if (args["out-data"] == "alta-binary")
+  {
+      try
+      {
+          std::ofstream out;
+          out.exceptions(std::ios_base::failbit);
+          out.open(args["output"]);
+          save_data_as_binary(out, *d_out);
+      }
+      CATCH_FILE_IO_ERROR(args["output"]);
+  }
+  else
+      d_out->save(args["output"]);
+
 	return EXIT_SUCCESS;
 }

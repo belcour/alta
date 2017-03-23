@@ -1,6 +1,7 @@
 import os, sys
 from subprocess import call
 from os.path import basename, splitext
+import filecmp
 
 import obtain
 
@@ -296,6 +297,80 @@ cmd01 = make_command_test('data2data', ['--input', test_byproduct('gold-metallic
 env.Depends(cmd01,cmd00)
 AlwaysBuild(cmd01)
 env.Alias('tests',cmd01)
+
+# Convert from ALTA's text format to ALTA's binary format and back.
+cmd02 = make_command_test('data2data',
+                          ['--input',
+                           test_byproduct('gold-metallic-paint.alta'),
+                           '--output',
+                           test_byproduct('gold-metallic-paint-all-values.alta-bin'),
+                           '--out-data', 'alta-binary',
+                           '--all-values'],
+                          'alta-to-alta-binary')
+env.Depends(cmd02, cmd00)
+
+cmd03 = make_command_test('data2data',
+                          ['--input',
+                           test_byproduct('gold-metallic-paint-all-values.alta-bin'),
+                           '--output',
+                           test_byproduct('gold-metallic-paint2.alta'),
+                           '--all-values'],
+                          'alta-binary-to-alta')
+env.Depends(cmd03, cmd02)
+
+def check_that_files_are_identical(file1, file2):
+  """Return a function that checks whether FILE1 and FILE2 are identical."""
+  def compare_files(env, target, source):
+    identical = filecmp.cmp(file1, file2)
+    with open(str(target[0]), 'w') as log:
+      if identical:
+        log.write("PASS: '" + file1 + "' and '" + file2 + "' are identical\n")
+      else:
+        log.write("FAIL: '" + file1 + "' and '" + file2 + "' differ\n")
+        return 1
+
+  return compare_files
+
+cmd04 = env.Command('data2data-alta-to-binary-to-alta.log',
+                    test_byproduct('gold-metallic-paint2.alta'),
+                    check_that_files_are_identical(test_byproduct('gold-metallic-paint.alta'),
+                                                   test_byproduct('gold-metallic-paint2.alta')))
+
+env.Depends(cmd04, cmd00)
+env.Depends(cmd04, cmd03)
+env.Alias('tests', cmd04)
+
+# Convert from MERL to ALTA's binary format.
+cmd05 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD',
+                                        '--input', test_byproduct('gold-metallic-paint.binary'),
+                                        '--in-data', 'data_merl',
+                                        '--out-data', 'alta-binary',
+                                        '--output', test_byproduct('gold-metallic-paint2.alta-bin'),
+                                        '--all-values'],
+                          'merl-to-alta-all-values-binary')
+env.Depends(cmd05, downloadGold)
+env.Alias('tests', cmd05)
+
+
+cmd06 = make_command_test('data2data',
+                          ['--input',
+                           test_byproduct('gold-metallic-paint2.alta-bin'),
+                           '--output',
+                           test_byproduct('gold-metallic-paint3.alta'),
+                           '--all-values'],
+                          'alta-binary-to-alta2')
+env.Depends(cmd06, cmd05)
+env.Alias('tests', cmd06)
+
+cmd07 = env.Command('data2data-merl-to-alta-binary-to-alta.log',
+                    test_byproduct('gold-metallic-paint3.alta'),
+                    check_that_files_are_identical(test_byproduct('gold-metallic-paint.alta'),
+                                                   test_byproduct('gold-metallic-paint3.alta')))
+
+env.Depends(cmd07, cmd00)
+env.Depends(cmd07, cmd06)
+env.Alias('tests', cmd07)
+
 
 # ADD C++ Test if the two previous tests have passed and if Catch submodule is available
 if have_catch:
