@@ -1,5 +1,5 @@
 import os, sys
-from subprocess import call
+from subprocess import call, Popen, STDOUT
 from os.path import basename, splitext
 import filecmp
 
@@ -81,9 +81,9 @@ def run_unit_test(env, target, source):
    envvars = build_environment_variables()
 
    with open(str(target[0]),'w') as log:
-     log.write(str(envvars) + '\n')
      if splitext(program)[1] == '.py':
        command = env['PYTHON'] + ' ' + program
+       log.write(str(envvars) + '\n')
        if call([env['PYTHON'], program], env=envvars) == 0:
          log.write("PASS: " + command + "\n")
          return 0
@@ -91,7 +91,11 @@ def run_unit_test(env, target, source):
          log.write("FAIL: " + command + "\n")
          return 1
      else:
-       if os.spawnle(os.P_WAIT, program, program, envvars) == 0:
+       pipe = Popen([program], env = envvars,
+                    stdout = log, stderr = STDOUT)
+       pipe.wait()
+       log.write('\n' + str(envvars) + '\n')
+       if pipe.returncode == 0:
          log.write("PASS: " + program + "\n")
          return 0
        else:
@@ -104,10 +108,13 @@ def run_command(arguments):
     program = str(source[0].abspath)
     envvars = build_environment_variables()
 
-    status = os.spawnve(os.P_WAIT, program, [program] + arguments, envvars)
-    command = ' '.join([program] + arguments)
     with open(str(target[0]), 'w') as log:
-      log.write(str(envvars) + '\n');
+      pipe = Popen([program] + arguments, env = envvars, \
+                   stdout = log, stderr = STDOUT)
+      pipe.wait()
+      status = pipe.returncode
+      command = ' '.join([program] + arguments)
+      log.write('\n' + str(envvars) + '\n');
       if status == 0:
         log.write("PASS: '" + command + "' succeeded\n")
       else:
