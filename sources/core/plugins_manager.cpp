@@ -506,12 +506,19 @@ ptr<data> plugins_manager::load_data(const std::string& file,
 {
     std::ifstream stream;
 
+    // Create a temporary `arguments` object to pass information data
+    // to the newly created plugin. Some arguments are provided
+    // through the soft command. Here we only force the filename to
+    // be located at item "filename"
+    arguments n_args(args);
+    n_args.update("filename", file);
+
     // Raise an exception when 'open' fails, and open in binary mode to
     // placate Windows.
     stream.exceptions(std::ios::failbit);
     stream.open(file.c_str(), std::ifstream::binary);
     stream.exceptions(std::ios::goodbit);
-    ptr<data> result = load_data(type, stream, args);
+    ptr<data> result = load_data(type, stream, n_args);
     stream.close();                          // FIXME: make it auto-close
 
     return result;

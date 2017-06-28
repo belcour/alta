@@ -320,14 +320,37 @@ ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args)
 		} else
 #endif
 
+
 	UTIA* result = new UTIA(alta::parameters(4, 3,
                                              params::SPHERICAL_TL_PL_TV_PV,
                                              params::RGB_COLOR));
 
-    int count = result->planes * result->nti * result->npi
-                               * result->ntv * result->npv;
-   	input.read((char*)result->Bd, count*sizeof(double));
-   	std::cout << "<<INFO>> Successfully read BRDF" << std::endl;
+	// Check the filename extension and perform the adequate loading depending
+	// if it is an EXR file or a binary file.
+	std::string filename = args["filename"];
+	if(filename.substr(filename.find_last_of(".") + 1) == "exr") {
+		// EXR data reading
+		double *temp; int W, H;
+    	t_EXR_IO<double>::LoadEXR(input, W, H, temp);
+
+		// Data copy
+		for(int i=0; i<H; ++i)
+			for(int j=0; j<W; ++j){
+				int indexUTIA = i*W+j;
+				int indexEXR  = (H-i-1)*W+j;
+				result->Bd[indexUTIA + 0*N_PER_PLANE] = temp[3*indexEXR + 0];
+				result->Bd[indexUTIA + 1*N_PER_PLANE] = temp[3*indexEXR + 1];
+				result->Bd[indexUTIA + 2*N_PER_PLANE] = temp[3*indexEXR + 2];
+			}
+		delete[] temp;
+		std::cout << "<<INFO>> Successfully read EXR BRDF file" << std::endl;
+
+	} else {
+		int count = result->planes * result->nti * result->npi
+                                   * result->ntv * result->npv;
+		input.read((char*)result->Bd, count*sizeof(double));
+		std::cout << "<<INFO>> Successfully read binary BRDF file" << std::endl;
+	}
 
     return result;
 }
