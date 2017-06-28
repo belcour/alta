@@ -84,10 +84,12 @@ public:
 		this->nPerPlane = N_PER_PLANE;
 		this->Bd = new double[planes*nti*npi*ntv*npv];
 
+		_min = vec(4);
 	    _min[0] = 0.0;
 	    _min[1] = 0.0;
 	    _min[2] = 0.0;
 	    _min[3] = 0.0;
+		_max = vec(4);
 	    _max[0] = 0.5*M_PI;
 	    _max[1] = 2.0*M_PI;
 	    _max[2] = 0.5*M_PI;
@@ -318,19 +320,14 @@ ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args)
 		} else
 #endif
 
-    UTIA* result = new UTIA(alta::parameters(0, 0,
-                                             params::UNKNOWN_INPUT,
-                                             params::UNKNOWN_OUTPUT));
+	UTIA* result = new UTIA(alta::parameters(4, 3,
+                                             params::SPHERICAL_TL_PL_TV_PV,
+                                             params::RGB_COLOR));
 
-    int count = 0;
-    for(int isp=0; isp < result->planes; isp++)	{
-        for(int ni=0; ni< result->nti * result->npi; ni++)
-            for(int nv=0; nv < result->ntv * result->npv; nv++) {
-                input >> result->Bd[count++];
-            }
-    }
-
-		std::cout << "<<INFO>> Successfully read BRDF" << std::endl;
+    int count = result->planes * result->nti * result->npi
+                               * result->ntv * result->npv;
+   	input.read((char*)result->Bd, count*sizeof(double));
+   	std::cout << "<<INFO>> Successfully read BRDF" << std::endl;
 
     return result;
 }
