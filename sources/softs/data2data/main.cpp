@@ -248,7 +248,7 @@ static void convert_with_interpolation(ptr<data> d_in, ptr<data> d_out)
         // Check if the output configuration is below the hemisphere when
         // converted to cartesian coordinates. Note that this prevent from
         // converting BTDF data.
-        if(cart[2] >= 0.0 || cart[5] >= 0.0) {
+        if(cart[2] >= 0.0 && cart[5] >= 0.0) {
             params::convert(&cart[0], params::CARTESIAN,
                             d_in->parametrization().input_parametrization(),
                             &temp[0]);
