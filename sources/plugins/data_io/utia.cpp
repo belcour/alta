@@ -337,7 +337,7 @@ ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args)
 		for(int i=0; i<H; ++i)
 			for(int j=0; j<W; ++j){
 				int indexUTIA = i*W+j;
-				int indexEXR  = (H-i-1)*W+j;
+				int indexEXR  = i*W+j;
 				result->Bd[indexUTIA + 0*N_PER_PLANE] = temp[3*indexEXR + 0];
 				result->Bd[indexUTIA + 1*N_PER_PLANE] = temp[3*indexEXR + 1];
 				result->Bd[indexUTIA + 2*N_PER_PLANE] = temp[3*indexEXR + 2];
