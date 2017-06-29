@@ -131,7 +131,7 @@ public:
 			for(int i=0; i<H; ++i)
 				for(int j=0; j<W; ++j){
 					int indexUTIA = i*W+j;
-					int indexEXR  = (H-i-1)*W+j;
+					int indexEXR  = i*W+j;
 	    			temp[3*indexEXR + 0] = Bd[indexUTIA + 0*nPerPlane];
 	    			temp[3*indexEXR + 1] = Bd[indexUTIA + 1*nPerPlane];
 	    			temp[3*indexEXR + 2] = Bd[indexUTIA + 2*nPerPlane];
@@ -296,9 +296,9 @@ public:
 	}
 
 	virtual void set(int i, const vec& x) {
-		assert(x.size() == parametrization().dimY());
+      const vec& y = x.tail(parametrization().dimY());
 		for(int isp=0; isp<planes; ++isp) {
-			Bd[isp*nPerPlane + i] = x[isp];
+			Bd[isp*nPerPlane + i] = y[isp];
 		}
 	}
 
@@ -308,7 +308,9 @@ public:
 ALTA_DLL_EXPORT data* provide_data(size_t size, const parameters& params,
                                    const arguments&)
 {
-    return new UTIA(params);
+   return new UTIA(alta::parameters(4, 3,
+                                    params::SPHERICAL_TL_PL_TV_PV,
+                                    params::RGB_COLOR));
 }
 
 ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args)
