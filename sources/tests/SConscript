@@ -1,12 +1,14 @@
 import os, sys
-from subprocess import call
+from subprocess import call, Popen, STDOUT
 from os.path import basename, splitext
+import filecmp
 
 import obtain
 
-Import('env', 'ALTA_LIBS', 'openexr_available')
+Import('env', 'ALTA_LIBS', 'openexr_available', 'catch_available')
 env = env.Clone()
 
+have_catch = catch_available(env)
 have_openexr = openexr_available(env)
 conf = Configure(env)
 have_cppquickcheck = conf.CheckLibWithHeader('cppqc', 'cppqc.h', 'C++')
@@ -79,9 +81,9 @@ def run_unit_test(env, target, source):
    envvars = build_environment_variables()
 
    with open(str(target[0]),'w') as log:
-     log.write(str(envvars) + '\n')
      if splitext(program)[1] == '.py':
        command = env['PYTHON'] + ' ' + program
+       log.write(str(envvars) + '\n')
        if call([env['PYTHON'], program], env=envvars) == 0:
          log.write("PASS: " + command + "\n")
          return 0
@@ -89,7 +91,11 @@ def run_unit_test(env, target, source):
          log.write("FAIL: " + command + "\n")
          return 1
      else:
-       if os.spawnle(os.P_WAIT, program, program, envvars) == 0:
+       pipe = Popen([program], env = envvars,
+                    stdout = log, stderr = STDOUT)
+       pipe.wait()
+       log.write('\n' + str(envvars) + '\n')
+       if pipe.returncode == 0:
          log.write("PASS: " + program + "\n")
          return 0
        else:
@@ -102,10 +108,13 @@ def run_command(arguments):
     program = str(source[0].abspath)
     envvars = build_environment_variables()
 
-    status = os.spawnve(os.P_WAIT, program, [program] + arguments, envvars)
-    command = ' '.join([program] + arguments)
     with open(str(target[0]), 'w') as log:
-      log.write(str(envvars) + '\n');
+      pipe = Popen([program] + arguments, env = envvars, \
+                   stdout = log, stderr = STDOUT)
+      pipe.wait()
+      status = pipe.returncode
+      command = ' '.join([program] + arguments)
+      log.write('\n' + str(envvars) + '\n');
       if status == 0:
         log.write("PASS: '" + command + "' succeeded\n")
       else:
@@ -201,6 +210,7 @@ if 'python' in COMMAND_LINE_TARGETS:
    for test in PYTHON_TESTS:
       make_test_python(test)
 
+
 # Make sure commands from the tutorials actually work.
 
 cmd1 = make_command_test('data2brdf', [ '--input', test_file, '--output',
@@ -271,6 +281,115 @@ downloadKrylon = env.Command(test_output_directory + '/krylon_blue_RGB.astm',
 # takes ages.
 downloadGold.noclean   = True
 downloadKrylon.noclean = True
+
+
+# Test Some basic conversion from MERL to ALTA ... 
+cmd00 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD', 
+                                        '--input', test_byproduct('gold-metallic-paint.binary'),
+                                        '--in-data', 'data_merl',
+                                        '--output', test_byproduct('gold-metallic-paint.alta'),
+                                        '--all-values'],
+                          'merl-to-alta-all-values')
+
+env.Depends(cmd00, downloadGold)
+AlwaysBuild(cmd00)
+env.Alias('tests',cmd00)
+
+# ... and from ALTA to ALTA using filtering
+cmd01 = make_command_test('data2data', ['--input', test_byproduct('gold-metallic-paint.alta'),
+                                         '--output', test_byproduct('gold-metallic-paint_positive_only.alta'),
+                                         '--all-values', '--param RUSIN_TH_TD_PD', '--ymin [0.0, 0.0, 0.0]'],
+                          'alta-to-alta-positive-values-only')
+
+env.Depends(cmd01,cmd00)
+AlwaysBuild(cmd01)
+env.Alias('tests',cmd01)
+
+# Convert from ALTA's text format to ALTA's binary format and back.
+cmd02 = make_command_test('data2data',
+                          ['--input',
+                           test_byproduct('gold-metallic-paint.alta'),
+                           '--output',
+                           test_byproduct('gold-metallic-paint-all-values.alta-bin'),
+                           '--out-data', 'alta-binary',
+                           '--all-values'],
+                          'alta-to-alta-binary')
+env.Depends(cmd02, cmd00)
+
+cmd03 = make_command_test('data2data',
+                          ['--input',
+                           test_byproduct('gold-metallic-paint-all-values.alta-bin'),
+                           '--output',
+                           test_byproduct('gold-metallic-paint2.alta'),
+                           '--all-values'],
+                          'alta-binary-to-alta')
+env.Depends(cmd03, cmd02)
+
+def check_that_files_are_identical(file1, file2):
+  """Return a function that checks whether FILE1 and FILE2 are identical."""
+  def compare_files(env, target, source):
+    identical = filecmp.cmp(file1, file2)
+    with open(str(target[0]), 'w') as log:
+      if identical:
+        log.write("PASS: '" + file1 + "' and '" + file2 + "' are identical\n")
+      else:
+        log.write("FAIL: '" + file1 + "' and '" + file2 + "' differ\n")
+        return 1
+
+  return compare_files
+
+cmd04 = env.Command('data2data-alta-to-binary-to-alta.log',
+                    test_byproduct('gold-metallic-paint2.alta'),
+                    check_that_files_are_identical(test_byproduct('gold-metallic-paint.alta'),
+                                                   test_byproduct('gold-metallic-paint2.alta')))
+
+env.Depends(cmd04, cmd00)
+env.Depends(cmd04, cmd03)
+env.Alias('tests', cmd04)
+
+# Convert from MERL to ALTA's binary format.
+cmd05 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD',
+                                        '--input', test_byproduct('gold-metallic-paint.binary'),
+                                        '--in-data', 'data_merl',
+                                        '--out-data', 'alta-binary',
+                                        '--output', test_byproduct('gold-metallic-paint2.alta-bin'),
+                                        '--all-values'],
+                          'merl-to-alta-all-values-binary')
+env.Depends(cmd05, downloadGold)
+env.Alias('tests', cmd05)
+
+
+cmd06 = make_command_test('data2data',
+                          ['--input',
+                           test_byproduct('gold-metallic-paint2.alta-bin'),
+                           '--output',
+                           test_byproduct('gold-metallic-paint3.alta'),
+                           '--all-values'],
+                          'alta-binary-to-alta2')
+env.Depends(cmd06, cmd05)
+env.Alias('tests', cmd06)
+
+cmd07 = env.Command('data2data-merl-to-alta-binary-to-alta.log',
+                    test_byproduct('gold-metallic-paint3.alta'),
+                    check_that_files_are_identical(test_byproduct('gold-metallic-paint.alta'),
+                                                   test_byproduct('gold-metallic-paint3.alta')))
+
+env.Depends(cmd07, cmd00)
+env.Depends(cmd07, cmd06)
+env.Alias('tests', cmd07)
+
+
+# ADD C++ Test if the two previous tests have passed and if Catch submodule is available
+if have_catch:
+  CXX_CATCH_TESTS = ['core/conversion-catch-1.cpp']
+  env.AppendUnique(CPPPATH = ['#external/Catch/single_include/'])
+
+  for test in CXX_CATCH_TESTS:
+    make_cxx_test_alias(test)
+  #end_for_loop
+
+#end_if_have_catch
+
 
 if have_openexr:
   cmd5 = make_command_test('data2data',

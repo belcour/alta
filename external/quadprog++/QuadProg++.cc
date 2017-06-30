@@ -210,7 +210,7 @@ double solve_quadprog_with_guess(Ref<const MatrixXd> L, Ref<const VectorXd> g0,
   for (int i = 0; i < n; i++)
   {
     d[i] = 1.0;
-    J.col(i) = L.triangularView<Lower>().solve(d);
+    J.col(i) = L.transpose().triangularView<Upper>().solve(d);
     c2 += J(i,i);
     d[i] = 0.0;
   }
@@ -220,7 +220,7 @@ double solve_quadprog_with_guess(Ref<const MatrixXd> L, Ref<const VectorXd> g0,
   f_value = 0.5 * g0.dot(x);
 
   TRACE_SOLVER( std::cout << "Unconstrained solution: " << f_value << std::endl );
-  TRACE_SOLVER( print_vector("x", x) );
+  TRACE_SOLVER( std::cout << "x: " << x.transpose() << std::endl );
 
   // Add equality constraints to the working set A
   iq = 0;
@@ -284,7 +284,7 @@ double solve_quadprog_with_guess(Ref<const MatrixXd> L, Ref<const VectorXd> g0,
   int nb_satisfied_chunks = 0;
   while(iter<=10*m) // make sure we do not run into an infinite loop
   {
-    TRACE_SOLVER( print_vector("x", x) );
+    TRACE_SOLVER( std::cout << "x: " << x.transpose() << std::endl );
     // step 1: choose a violated constraint
 
     // FIXME: should be removed:
@@ -455,7 +455,7 @@ double solve_quadprog_with_guess(Ref<const MatrixXd> L, Ref<const VectorXd> g0,
     A[iq] = ip;         // add ip to the active set A
 
     TRACE_SOLVER( std::cout << "Trying with constraint " << ip << std::endl );
-    TRACE_SOLVER( print_vector("np", np) );
+    TRACE_SOLVER( std::cout << "np: " << np.transpose() << std::endl );
 
     // Project onto constraint ip
     int count = 0;
@@ -642,9 +642,9 @@ bool add_constraint(Ref<MatrixXd> R, Ref<MatrixXd> J, Ref<VectorXd> d, int& iq, 
   R.col(iq-1).head(iq) = d.head(iq);
 
   TRACE_SOLVER( std::cout << iq << std::endl );
-  TRACE_SOLVER( print_matrix("R", R, iq, iq) );
-  TRACE_SOLVER( print_matrix("J", J) );
-  TRACE_SOLVER( print_vector("d", d, iq) );
+  TRACE_SOLVER( std::cout << "R:\n" << R.topLeftCorner(iq,iq) << std::endl );
+  TRACE_SOLVER( std::cout << "J:\n" << J << std::endl  );
+  TRACE_SOLVER( std::cout << "d: " << d.head(iq).transpose() << std::endl );
 
   if (std::abs(d[iq - 1]) <= std::numeric_limits<double>::epsilon() * R_norm)
   {
