@@ -296,6 +296,7 @@ public:
 	}
 
 	virtual void set(int i, const vec& x) {
+      assert(x.size() == (parametrization().dimX() + parametrization().dimY()));
       const vec& y = x.tail(parametrization().dimY());
 		for(int isp=0; isp<planes; ++isp) {
 			Bd[isp*nPerPlane + i] = y[isp];
