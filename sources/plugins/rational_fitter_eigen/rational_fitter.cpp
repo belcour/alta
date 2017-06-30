@@ -103,9 +103,9 @@ bool rational_fitter_eigen::fit_data(const ptr<vertical_segment>& d, int np, int
 }
 
 // dat is the data object, it contains all the points to fit
-// np and nq are the degree of the RP to fit to the data
+// np and nq are the degree of the Rational Polynomial Function to fit to the data
 // y is the dimension to fit on the y-data (e.g. R, G or B for RGB signals)
-// the function return a ration BRDF function and a boolean
+// the function returns a rational BRDF function and a boolean
 bool rational_fitter_eigen::fit_data(const ptr<vertical_segment>& d, int np, int nq, int ny, rational_function_1d* r)
 {
 	// Each constraint (fitting interval or point
