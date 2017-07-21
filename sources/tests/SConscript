@@ -457,7 +457,8 @@ if have_openexr:
 
 
   # if we have the m100_fabric140.exr we can verify that some conversions with UTIA DB are working
-  UTIA_TEST_FILE = File('m100_fabric140.exr').srcnode().abspath
+  UTIA_TEST_FILE = test_byproduct('m100_fabric140.exr')
+
   if os.path.isfile(UTIA_TEST_FILE):
 
     cmd_utia_idempotence = make_command_test('data2data',
@@ -521,6 +522,10 @@ if have_openexr:
 
 
   #end_if  UTIA No-Regression TEST
+  else:
+    print "<<<WARNING>>> COULD NOT FIND m100_fabric140.exr !!! "
+    print "<<<ERROR>>>   Download and put the file in:" + test_output_directory
+  #end_if_else
 
 
 
@@ -547,7 +552,8 @@ if have_openexr:
                                '--data', 'vertical_segment'],
                               'compound-function-to-vs')
     env.Depends(cmd11, cmd10)
-    env.Depends(cmd11, cmd9)
+    # DO NOT SEE WHY cmd11 should depend cmd9
+    #env.Depends(cmd11, cmd9)
     env.Depends(cmd11, cmd6)
     AlwaysBuild(cmd11)
     env.Alias('tests', cmd11)
