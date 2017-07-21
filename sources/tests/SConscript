@@ -455,6 +455,80 @@ if have_openexr:
   AlwaysBuild(cmd9)
   env.Alias('tests', cmd9)
 
+
+  # if we have the m100_fabric140.exr we can verify that some conversions with UTIA DB are working
+  UTIA_TEST_FILE = test_byproduct('m100_fabric140.exr')
+
+  if os.path.isfile(UTIA_TEST_FILE):
+
+    cmd_utia_idempotence = make_command_test('data2data',
+                                             ['--input',
+                                             test_byproduct('m100_fabric140.exr'),
+                                              '--in-data', 'data_utia',
+                                              '--out-data', 'data_merl',
+                                              '--output',
+                                              test_byproduct('m100_fabric140-3.exr')],
+                                              'data2data-utia-to-utia')
+
+    AlwaysBuild(cmd_utia_idempotence);
+    env.Alias('tests', cmd_utia_idempotence)
+
+    cmd_utia_1 = make_command_test('data2data',
+                                   ['--input',
+                                    test_byproduct('m100_fabric140.exr'),
+                                    '--in-data', 'data_utia',
+                                    '--out-data', 'data_merl',
+                                    '--output',
+                                    test_byproduct('m100_fabric140.binary')],
+                                    'data2data-utia-to-merl')
+
+    AlwaysBuild(cmd_utia_1);
+    env.Alias('tests', cmd_utia_1)
+
+    cmd_utia_2 = make_command_test('data2data',
+                                   ['--input',
+                                    test_byproduct('m100_fabric140.binary'),
+                                    '--in-data', 'data_merl',
+                                    '--out-data', 'data_utia',
+                                    '--output',
+                                    test_byproduct('m100_fabric140-2.exr')],
+                                    'data2data-merl-to-utia')
+    AlwaysBuild(cmd_utia_2);
+    env.Depends(cmd_utia_2, cmd_utia_1)
+    env.Alias('tests', cmd_utia_2)
+
+    cmd_utia_check = make_command_test('data2stats',
+                                       ['--input',
+                                       test_byproduct('m100_fabric140-2.exr'),
+                                        '--in-data', 'data_utia',
+                                        '--ref',
+                                        test_byproduct('m100_fabric140.exr'),
+                                        '--ref-data', 'data_utia'],
+                                        'data2stats-utia-check');
+
+    AlwaysBuild(cmd_utia_check);
+    env.Depends(cmd_utia_check, cmd_utia_2)
+    env.Alias('tests', cmd_utia_check)
+
+    #TODO PARSE THE OUTPUT of cmd_utia_check to see of the Linf norm is < 1e-5 if yes test passes
+    # if not test fails
+    #
+    #log_output_directory = Dir('#build/sources/tests').abspath
+    # log_file = File(log_output_directory + os.sep + 'data2stats.data2stats-utia-check.log').abspath
+    # file_as_string = open(log_file, 'r').read()
+    # per_lines =  file_as_string.split('<<INFO>>')
+    # index = [i for i,x in enumerate(per_lines) if x.startswith(' Linf_norm')]
+    # line_inf = per_lines[index[0]].split(' ')
+
+
+  #end_if  UTIA No-Regression TEST
+  else:
+    print "<<<WARNING>>> COULD NOT FIND m100_fabric140.exr !!! "
+    print "<<<ERROR>>>   Download and put the file in:" + test_output_directory
+  #end_if_else
+
+
+
   if have_nonlinear_fitter_eigen:
     cmd10 = make_command_test('data2brdf',
                               ['--input',
@@ -478,10 +552,15 @@ if have_openexr:
                                '--data', 'vertical_segment'],
                               'compound-function-to-vs')
     env.Depends(cmd11, cmd10)
-    env.Depends(cmd11, cmd9)
+    # DO NOT SEE WHY cmd11 should depend cmd9
+    #env.Depends(cmd11, cmd9)
     env.Depends(cmd11, cmd6)
     AlwaysBuild(cmd11)
     env.Alias('tests', cmd11)
+
+
+#end_of_if_have_exr
+
 
 cmd20 = make_command_test('data2data',
                          ['--input',

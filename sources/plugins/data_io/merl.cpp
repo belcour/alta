@@ -151,7 +151,7 @@ public: // methods
 	}
 
 	void set(int i, const vec& x) {
-    	assert(x.size() == parametrization().dimX() + parametrization().dimY());
+    	assert(x.size() == (parametrization().dimX() + parametrization().dimY()));
 		int iR = i;
 		int iG = iR + _nSlice;
 		int iB = iG + _nSlice;

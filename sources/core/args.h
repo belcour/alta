@@ -43,6 +43,7 @@ class arguments
 		arguments()
 		{
 		}
+		arguments(const arguments& args) : _map(args._map) {}
     arguments(std::initializer_list<pair_type> lst)
         : _map(lst)
     {
@@ -517,7 +518,7 @@ class arguments
 		}
 
 
-	private: // data
+	protected: // data
 
 		std::map<std::string, std::string> _map ;
 

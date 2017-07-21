@@ -43,21 +43,42 @@ ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args);
 
 /*! \ingroup datas
  *  \class data_utia
- *  \brief Data interface for the [UTIA][utia] file format.
+ *  \brief Data importer/exporter for the [UTIA][utia] file format.
  *  [utia]: http://btf.utia.cas.cz/?brdf_dat_dwn
  *
- *  \details 
+ *  \details
  *
- *  This plugin enables to load any of the 150 measured anisotropic materials
+ *  This plugin enables to load any of the [150 measured anisotropic materials][utia]
  *  released by Filip et al. from the Czech Institute of Information Theory and
  *  Automation (UTIA). This format is an HDR image based format using OpenEXR
- *  or a binary format if not available. The data is stored as an array of
- *  azimuth slices for various elevation angles.
+ *  or a binary format. The data is stored as an array of azimuth slices for
+ *  various elevation angles.
  *
  *  This format is not very dense (only 6 elevation angles per view/light
- *  direction) but is quite large.
+ *  direction) but the dataset contains many anisotropic samples.
  *
- *  \author Laurent Belcour <laurent.belcour@umontreal.ca>
+ *  This plugin is mostly provided to import UTIA files to the ALTA format.
+ *  We recommend to convert this dataset to ALTA's internal format prior to
+ *  fitting. This can be done using the following command:
+ *
+ *      data2data --input [file] --in-data data_utia --output [file]
+ *
+ *  Note that the plugin automatically detect if the file is EXR or binary
+ *  using the filename extension. Do not change the extension's name in case
+ *  of an OpenEXR file.
+ *
+ *  Also, this plugin can be used to export to UTIA file format from ALTA's
+ *  internal file format. This can be done using the following command:
+ *
+ *      data2data --input [file] --in-data [interpolant] --output [file] --out-data data_utia
+ *
+ *  Note that you will have to use an interpolant plugin to fill all the
+ *  datapoints of this file format, or use splatting with a dense dataset.
+ *  Otherwise, you will have blank data.
+ *
+ *  [utia]: http://btf.utia.cas.cz/?brdf_dat_dwn
+ *
+ *  \author Laurent Belcour <laurent.belcour@gmail.com>
  *  \author Original code from Jiri Filip
  */
 class UTIA : public data {
@@ -84,10 +105,12 @@ public:
 		this->nPerPlane = N_PER_PLANE;
 		this->Bd = new double[planes*nti*npi*ntv*npv];
 
+		_min = vec(4);
 	    _min[0] = 0.0;
 	    _min[1] = 0.0;
 	    _min[2] = 0.0;
 	    _min[3] = 0.0;
+		_max = vec(4);
 	    _max[0] = 0.5*M_PI;
 	    _max[1] = 2.0*M_PI;
 	    _max[2] = 0.5*M_PI;
@@ -108,7 +131,7 @@ public:
 			for(int i=0; i<H; ++i)
 				for(int j=0; j<W; ++j){
 					int indexUTIA = i*W+j;
-					int indexEXR  = (H-i-1)*W+j;
+					int indexEXR  = i*W+j;
 	    			temp[3*indexEXR + 0] = Bd[indexUTIA + 0*nPerPlane];
 	    			temp[3*indexEXR + 1] = Bd[indexUTIA + 1*nPerPlane];
 	    			temp[3*indexEXR + 2] = Bd[indexUTIA + 2*nPerPlane];
@@ -254,9 +277,9 @@ public:
 		wpv[0] /= sum;
 		wpv[1] /= sum;
 
-		if(ipi[1]==npi) 
+		if(ipi[1]==npi)
 		ipi[1] = 0;
-		if(ipv[1]==npv) 
+		if(ipv[1]==npv)
 		ipv[1] = 0;
 
 		int nc = npv*ntv;
@@ -268,15 +291,15 @@ public:
 		      for(int k=0;k<2;k++)
 		        for(int l=0;l<2;l++)
 		          RGB[isp] += Bd[isp*nr*nc + nc*(npi*iti[i]+ipi[k]) + npv*itv[j]+ipv[l]] * wti[i] * wtv[j] * wpi[k] * wpv[l];
-		  //      RGB[isp] *= cos(theta_i/d2r);
 		}
 		return RGB;
 	}
 
 	virtual void set(int i, const vec& x) {
-		assert(x.size() == parametrization().dimY());
+      assert(x.size() == (parametrization().dimX() + parametrization().dimY()));
+      const vec& y = x.tail(parametrization().dimY());
 		for(int isp=0; isp<planes; ++isp) {
-			Bd[isp*nPerPlane + i] = x[isp];
+			Bd[isp*nPerPlane + i] = y[isp];
 		}
 	}
 
@@ -286,51 +309,43 @@ public:
 ALTA_DLL_EXPORT data* provide_data(size_t size, const parameters& params,
                                    const arguments&)
 {
-    return new UTIA(params);
+   return new UTIA(alta::parameters(4, 3,
+                                    params::SPHERICAL_TL_PL_TV_PV,
+                                    params::RGB_COLOR));
 }
 
 ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args)
 {
-#if 0 // FIXME: backport this
-		/* If the file is an OpenEXR image */
-		if(filename.substr(filename.find_last_of(".") + 1) == "exr") {
-        double* temp;
-        int W, H;
-        if(!t_EXR_IO<double>::LoadEXR(input, W, H, temp, 3) || W != npi*nti || H != ntv*npv) {
-            std::cerr << "<<ERROR>> Unable to open file '" << filename << "'" << std::endl;
-            throw;
+	UTIA* result = new UTIA(alta::parameters(4, 3,
+                                             params::SPHERICAL_TL_PL_TV_PV,
+                                             params::RGB_COLOR));
 
-        } else {
-            /* Data copy */
-            for(int i=0; i<H; ++i)
-                for(int j=0; j<W; ++j){
-                    int indexUTIA = i*W+j;
-                    int indexEXR  = (H-i-1)*W+j;
-                    Bd[indexUTIA + 0*nPerPlane] = temp[3*indexEXR + 0];
-                    Bd[indexUTIA + 1*nPerPlane] = temp[3*indexEXR + 1];
-                    Bd[indexUTIA + 2*nPerPlane] = temp[3*indexEXR + 2];
-                }
+	// Check the filename extension and perform the adequate loading depending
+	// if it is an EXR file or a binary file.
+	std::string filename = args["filename"];
+	if(filename.substr(filename.find_last_of(".") + 1) == "exr") {
+		// EXR data reading
+		double *temp; int W, H;
+    	t_EXR_IO<double>::LoadEXR(input, W, H, temp);
 
-            delete[] temp;
-        }
+		// Data copy
+		for(int i=0; i<H; ++i)
+			for(int j=0; j<W; ++j){
+				int indexUTIA = i*W+j;
+				int indexEXR  = i*W+j;
+				result->Bd[indexUTIA + 0*N_PER_PLANE] = temp[3*indexEXR + 0];
+				result->Bd[indexUTIA + 1*N_PER_PLANE] = temp[3*indexEXR + 1];
+				result->Bd[indexUTIA + 2*N_PER_PLANE] = temp[3*indexEXR + 2];
+			}
+		delete[] temp;
+		std::cout << "<<INFO>> Successfully read EXR BRDF file" << std::endl;
 
-        /* If the file is a binary */
-		} else
-#endif
-
-    UTIA* result = new UTIA(alta::parameters(0, 0,
-                                             params::UNKNOWN_INPUT,
-                                             params::UNKNOWN_OUTPUT));
-
-    int count = 0;
-    for(int isp=0; isp < result->planes; isp++)	{
-        for(int ni=0; ni< result->nti * result->npi; ni++)
-            for(int nv=0; nv < result->ntv * result->npv; nv++) {
-                input >> result->Bd[count++];
-            }
-    }
-
-		std::cout << "<<INFO>> Successfully read BRDF" << std::endl;
+	} else {
+		int count = result->planes * result->nti * result->npi
+                                   * result->ntv * result->npv;
+		input.read((char*)result->Bd, count*sizeof(double));
+		std::cout << "<<INFO>> Successfully read binary BRDF file" << std::endl;
+	}
 
     return result;
 }
