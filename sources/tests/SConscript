@@ -9,6 +9,12 @@ Import('env', 'ALTA_LIBS', 'openexr_available', 'catch_available')
 env = env.Clone()
 
 have_catch = catch_available(env)
+if not have_catch:
+  print "<<WARNING>> Could not locate Catch : Tests using catch will not be built and launched"
+  print "          Please use `git submodule init` and 'git submodule update` in external/Catch/"
+  print "           to get Catch Framework"
+
+
 have_openexr = openexr_available(env)
 conf = Configure(env)
 have_cppquickcheck = conf.CheckLibWithHeader('cppqc', 'cppqc.h', 'C++')
