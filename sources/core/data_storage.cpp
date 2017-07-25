@@ -1,6 +1,7 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
    Copyright (C) 2013, 2014, 2015, 2016, 2017 Inria
+   Copyright (C) 2017, CNRS
 
    This file is part of ALTA.
 
@@ -102,8 +103,9 @@ static void read_confidence_interval(std::istream& input,
         {
             input >> min_dt ;
             input >> max_dt ;
-            min_dt = min_dt-v(dimX + i);
-            max_dt = max_dt-v(dimX + i);
+            //min_dt = min_dt-v(dimX + i);
+            //max_dt = max_dt-v(dimX + i);
+            min_dt = -min_dt;
         }
         else if(i == 0 && kind == vertical_segment::SYMMETRICAL_CONFIDENCE_INTERVAL)
         {
