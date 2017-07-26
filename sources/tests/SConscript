@@ -5,6 +5,8 @@ import filecmp
 
 import obtain
 
+execfile( Dir('#sources/tests').abspath + '/test_utilities.py')
+
 Import('env', 'ALTA_LIBS', 'openexr_available', 'catch_available')
 env = env.Clone()
 
@@ -26,6 +28,37 @@ env.AppendUnique(CPPPATH = ['#sources/tests'])
 
 env.Prepend(LIBS = ['core'])
 env.AppendUnique(LIBS = ALTA_LIBS)
+
+# Use this function to compare two fitting results
+# Compare the norm of the fitting results not the coefficients
+def check_fitting_files(fit_filename1, fit_filename2, name_of_the_norm, epsilon):
+  def cmp_fitting_files(env, target, source):
+    fit_info1 = read_brdf_fit_file(fit_filename1)
+    fit_info2 = read_brdf_fit_file(fit_filename2)
+
+    if fit_info1.has_key('--' + name_of_the_norm) and \
+       fit_info2.has_key('--' + name_of_the_norm):
+
+      fits_are_identical = abs(fit_info1['--' + name_of_the_norm] - fit_info2['--' + name_of_the_norm] ) < epsilon
+
+      with open(str(target[0]), 'w') as log:
+        if fits_are_identical:
+          log.write('PASS: Fits are identical\n')
+          return 0
+        else:
+          log.write('FAIL: Something wrong between the two fitting results\n')
+          return 1
+        #end_if_else
+    else:
+      print '<<<ERROR>>> Requested Norm ' + name_of_the_norm + \
+            'to compare  files '+ fit_filename1 + 'and' + fit_filename2 + 'does not exist. TEST FAILURE'
+      return 1
+    #end_if_else
+  #end_def
+  return cmp_fitting_files
+#end_check_fitting_files
+
+
 
 # Portability.
 def library_search_path_variable():
@@ -448,6 +481,11 @@ if have_openexr:
   AlwaysBuild(cmd8)
   env.Alias('tests', cmd8)
 
+  #-------------------------------------------------------------------------------------------------
+  # Rational Fitting Tests
+  #-------------------------------------------------------------------------------------------------
+
+  # Rational Fitting Tests in 2D
   cmd9 = make_command_test('data2brdf',
                            ['--input',
                             test_byproduct('gold-metallic-paint.data'),
@@ -461,6 +499,109 @@ if have_openexr:
   AlwaysBuild(cmd9)
   env.Alias('tests', cmd9)
 
+
+  # 1D Rational Fitting with Quadprog.  absolute interval set to 0.05
+  test_1d_no_vs_file = test_data_directory + os.sep + 'Test_Smooth_Step_1d_no_vs.txt'
+
+  if os.path.isfile(test_1d_no_vs_file):
+    cmd90 = make_command_test('data2brdf',
+                             ['--input',
+                              test_1d_no_vs_file,
+                              '--output',
+                              test_byproduct('Test_Smooth_Step_1d_no_vs.func'),
+                              '--fitter', 'rational_fitter_quadprog',
+                              '--dt', '0.05',
+                              '--min-np', '1', '--min-nq', '1',
+                              '--np', '20', '--nq', '20'],
+                             'rational-fit-1d-quadprog')
+
+    AlwaysBuild(cmd90)
+    env.Alias('tests',cmd90)
+
+    abspath_to_fit_file1    = test_byproduct('Test_Smooth_Step_1d_no_vs.func')
+    abspath_to_no_reg_file1 = test_data_directory + os.sep + 'non_reg_fit_Test_Smooth_Step_1d_no_vs.func'
+
+    # A fitting results should always be equal to itself regardless of the norm
+    cmd900 = env.Command( 'test_check_cmp_fitting_files.log',
+                          abspath_to_fit_file1,
+                          check_fitting_files( abspath_to_fit_file1,abspath_to_fit_file1 , 'Linf',1e-5))
+
+
+    AlwaysBuild(cmd900)
+    env.Depends(cmd900, cmd90)
+    env.Alias('tests', cmd900)
+
+    # # Comparisons of the fitting results with the expected and stored results (non-regression)
+    cmd901 = env.Command( 'no_regress_rational-fit-1d-quadprog.log',
+                          abspath_to_fit_file1,
+                          check_fitting_files( abspath_to_fit_file1, abspath_to_no_reg_file1, 'Linf',1e-5))
+
+    AlwaysBuild(cmd901)
+    env.Depends(cmd901, cmd900)
+    env.Alias('tests', cmd901)
+  #if_end
+
+
+  # 1D Rational Fitting with Quadprog.  Vertical Segment are symetric and read from input file
+  test_1d_symetric_vs_file = test_data_directory + os.sep + 'Test_Smooth_Step_1d_pure_symetric_vs.txt'
+  if os.path.isfile(test_1d_symetric_vs_file):
+    cmd91 = make_command_test('data2brdf',
+                             ['--input',
+                              test_1d_symetric_vs_file,
+                              '--output',
+                              test_byproduct('Test_Smooth_Step_1d_symetric_vs.func'),
+                              '--fitter', 'rational_fitter_quadprog',
+                              '--min-np', '1', '--min-nq', '1',
+                              '--np', '20', '--nq', '20'],
+                             'rational-fit-1d-quadprog-symetric-vs')
+
+    AlwaysBuild(cmd91)
+    env.Alias('tests',cmd91)
+
+    abspath_to_fit_file2 = test_byproduct('Test_Smooth_Step_1d_symetric_vs.func')
+
+    # We check that the fitting results with VS from file Test_Smooth_Step_1d_pure_symetric_vs.txt
+    # and fitting without VS but with --dt 0.5 are the same
+    cmd911 = env.Command( 'no_regress_rational_1d_fit_vs_sym.log',
+                          abspath_to_fit_file2,
+                          check_fitting_files( abspath_to_fit_file1, abspath_to_fit_file2, 'Linf',1e-5))
+
+    AlwaysBuild(cmd911)
+    env.Depends(cmd911, cmd91)
+    env.Alias('tests', cmd911)
+  #if_end
+
+  # 1D Rational Fitting with Quadprog.  Vertical Segment are Asymetric and read from input file
+  test_1d_Asymetric_vs_file = test_data_directory + os.sep + 'Test_Smooth_Step_1d_Asymetric_vs.txt'
+  if os.path.isfile(test_1d_Asymetric_vs_file):
+    cmd92 = make_command_test('data2brdf',
+                             ['--input',
+                              test_1d_Asymetric_vs_file,
+                              '--output',
+                              test_byproduct('Test_Smooth_Step_1d_Asymetric_vs.func'),
+                              '--fitter', 'rational_fitter_quadprog',
+                              '--min-np', '1', '--min-nq', '1',
+                              '--np', '20', '--nq', '20'],
+                             'rational-fit-1d-quadprog-Asymetric-vs')
+
+    AlwaysBuild(cmd92)
+    env.Alias('tests',cmd92)
+
+    abspath_to_fit_file3 = test_byproduct('Test_Smooth_Step_1d_Asymetric_vs.func')
+    abspath_to_no_reg_file3 = test_data_directory + os.sep + 'non_reg_fit_Test_Smooth_Step_1d_Asymetric_vs.func'
+
+    cmd921 = env.Command( 'no_regress_asymetric_vs_rational-fit-1d-quadprog.log',
+                          abspath_to_fit_file3,
+                          check_fitting_files( abspath_to_fit_file3, abspath_to_no_reg_file3, 'Linf',1e-5))
+
+    AlwaysBuild(cmd921)
+    env.Depends(cmd921, cmd92)
+    env.Alias('tests', cmd921)
+  #if_end
+
+  #-------------------------------------------------------------------------------------------------
+  # END of Rational Fitting Tests
+  #-------------------------------------------------------------------------------------------------
 
   # if we have the m100_fabric140.exr we can verify that some conversions with UTIA DB are working
   UTIA_TEST_FILE = test_byproduct('m100_fabric140.exr')
