@@ -8,6 +8,7 @@
    License, v. 2.0.  If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/.  */
 
+#include <core/common.h>
 #include <core/data.h>
 
 #include <cstdio>
@@ -173,7 +174,7 @@ class BrdfSlice : public data {
 			// Safeguard. We can use either asserting or returning zero in case
 			// the query values are not within reach.
 			if(_x[0] > _max[0] || x[0] < _min[0] || x[1] > _max[1] || x[1] < _min[1] ||
-				isnan(_x[0]) || isnan(x[1])) {
+				alta::isnan(_x[0]) || alta::isnan(x[1])) {
 					vec res(3);
 					return res;
 			}

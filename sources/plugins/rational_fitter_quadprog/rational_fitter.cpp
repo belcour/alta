@@ -22,9 +22,9 @@
 #include <iomanip>
 #include <set>
 
-#ifdef WIN32
-#define isnan(X) ((X != X))
-#endif
+// #ifdef WIN32
+// #define isnan(X) ((X != X))
+// #endif
 
 #include <core/common.h>
 
@@ -355,7 +355,7 @@ bool rational_fitter_quadprog::fit_data(const ptr<vertical_segment>& d, int np, 
   for(int i=0; i<np+nq; ++i)
   {
     const double v = x[i];
-    solves_qp = solves_qp && !isnan(v) && (v != std::numeric_limits<double>::infinity()) ;
+    solves_qp = solves_qp && !alta::isnan(v) && (v != std::numeric_limits<double>::infinity()) ;
   }
 
   if(solves_qp)
