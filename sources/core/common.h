@@ -128,14 +128,6 @@ throw
 
 // Mathematical definition not provided on the Window plateform
 #ifdef _MSC_VER
-
-#if (_MSC_VER < 1800)
-template<typename T> bool isnan(T x)
-{
-	return x==std::numeric_limits<T>::signaling_NaN();
-}
-#endif
-
 template<typename T> T erf(T x)
 {
     // constants
@@ -164,19 +156,21 @@ template<typename T> T erfc( T x )
 {
   return 1 - erf(x);
 }
-#else
+#endif // END OF erf and erc not provided by Windows plateform 
 
-// Laurent: This code is required under Debian (and most GNU/Linux), but 
-// is not compatible with OSX with default STL that comes with clang.
-// TODO: Find a better way to have isnan defined all the time.
-#if !defined(__APPLE__) || !defined(__clang__)
+
+#if __cplusplus >= 201103L || (__cplusplus < 200000 && __cplusplus > 199711L)
 template<typename T> bool isnan(T x)
 {
-	return x==std::numeric_limits<T>::signaling_NaN();
+    return std::isnan(x);
+}
+#else
+template<typename T> bool isnan(T x)
+{
+    return (x != x );
 }
 #endif
 
-#endif
 
 #ifdef _WIN32
 #define ALTA_DLL_EXPORT extern "C" __declspec(dllexport)
