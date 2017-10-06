@@ -377,7 +377,7 @@ def check_that_files_are_identical(file1, file2):
 
   return compare_files
 
-cmd04 = env.Command('data2data-alta-to-binary-to-alta.log',
+cmd04 = env.Command('data2data.alta-to-binary-to-alta.log',
                     test_byproduct('gold-metallic-paint2.alta'),
                     check_that_files_are_identical(test_byproduct('gold-metallic-paint.alta'),
                                                    test_byproduct('gold-metallic-paint2.alta')))
