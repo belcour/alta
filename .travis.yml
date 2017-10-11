@@ -1,0 +1,37 @@
+language: cpp
+matrix:
+   include:
+      - os: linux
+        dist: trusty
+        sudo: required
+        addons:
+           apt:
+              sources:
+                 - ubuntu-toolchain-r-test
+              packages:
+                 - g++-6
+                 - cmake
+                 - libceres-dev
+                 - libboost-python-dev
+                 - libnlopt-dev
+                 - coinor-libipopt-dev
+
+      - os: osx
+        before_install:
+           - brew update
+           - brew install scons
+
+
+before_install:
+   - OMP_NUM_THREADS=2
+   - eval "${MATRIX_EVAL}"
+     #- sudo apt-get update  -qq -y
+     #- sudo apt-get install -qq -y libopenexr-dev cmake libboost-python-dev libnlopt-dev coinor-libipopt-dev liblapack-dev libblas-dev libgfortran-4.8-dev
+
+script:
+   - git submodule init
+   - git submodule update
+   - scons
+   - scons tests
+   #- scons tests python -i
+
