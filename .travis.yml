@@ -11,10 +11,7 @@ matrix:
               packages:
                  - g++-6
                  - cmake
-                 - libceres-dev
                  - libboost-python-dev
-                 - libnlopt-dev
-                 - coinor-libipopt-dev
 
       - os: osx
         before_install:
