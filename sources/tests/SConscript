@@ -207,9 +207,12 @@ def make_help_test_alias(program):
 
 def make_command_test(program, arguments, identifier):
   """Add a test that invokes PROGRAM with ARGUMENTS."""
-  return env.Command(basename(program) + '.' + identifier + '.log',
-                     executable('#build/softs/' + program),
-                     run_command(arguments))
+  command = env.Command(basename(program) + '.' + identifier + '.log',
+                      executable('#build/softs/' + program),
+                      run_command(arguments))
+  AlwaysBuild(command)
+  env.Alias('tests', command);
+  return command;
 
 def make_test_python(script):
    command = env.Command(basename(splitext(script)[0])+ '.log',
@@ -256,8 +259,6 @@ cmd1 = make_command_test('data2brdf', [ '--input', test_file, '--output',
                                         test_byproduct('Kirby.brdf'),
                                         '--fitter', 'rational_fitter_eigen' ],
                          'rational-fitter-eigen')
-AlwaysBuild(cmd1)
-env.Alias('tests', cmd1)
 
 cmd2 = make_command_test('brdf2data', [ '--input',
                                         test_byproduct('Kirby.brdf'),
@@ -266,8 +267,6 @@ cmd2 = make_command_test('brdf2data', [ '--input',
                                         '--data-file', test_file ],
                          'data-file')
 env.Depends(cmd2, cmd1)         # 'Kirby.brdf' is created by CMD1
-AlwaysBuild(cmd2)
-env.Alias('tests', cmd2)
 
 cmd3 = make_command_test('brdf2gnuplot', [ '--data-file', test_file,
                                            '--input',
@@ -277,8 +276,6 @@ cmd3 = make_command_test('brdf2gnuplot', [ '--data-file', test_file,
                          'gnuplot-export')
 
 env.Depends(cmd3, cmd1)         # 'Kirby.brdf' is created by CMD1
-AlwaysBuild(cmd3)
-env.Alias('tests', cmd3)
 
 cmd4 = make_command_test('brdf2brdf', [ '--input',
                                         test_byproduct('Kirby.brdf'),
@@ -287,8 +284,6 @@ cmd4 = make_command_test('brdf2brdf', [ '--input',
                                         '--export', 'matlab' ],
                          'matlab-export')
 env.Depends(cmd4, cmd1)         # 'Kirby.brdf' is created by CMD1
-AlwaysBuild(cmd4)
-env.Alias('tests', cmd4)
 
 def download_gold_metallic_paint(target, source, env):
   url = 'http://people.csail.mit.edu/wojciech/BRDFDatabase/brdfs/gold-metallic-paint.binary'
@@ -331,8 +326,6 @@ cmd00 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD',
                           'merl-to-alta-all-values')
 
 env.Depends(cmd00, downloadGold)
-AlwaysBuild(cmd00)
-env.Alias('tests',cmd00)
 
 # ... and from ALTA to ALTA using filtering
 cmd01 = make_command_test('data2data', ['--input', test_byproduct('gold-metallic-paint.alta'),
@@ -341,8 +334,6 @@ cmd01 = make_command_test('data2data', ['--input', test_byproduct('gold-metallic
                           'alta-to-alta-positive-values-only')
 
 env.Depends(cmd01,cmd00)
-AlwaysBuild(cmd01)
-env.Alias('tests',cmd01)
 
 # Convert from ALTA's text format to ALTA's binary format and back.
 cmd02 = make_command_test('data2data',
@@ -384,7 +375,6 @@ cmd04 = env.Command('data2data.alta-to-binary-to-alta.log',
 
 env.Depends(cmd04, cmd00)
 env.Depends(cmd04, cmd03)
-env.Alias('tests', cmd04)
 
 # Convert from MERL to ALTA's binary format.
 cmd05 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD',
@@ -395,7 +385,6 @@ cmd05 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD',
                                         '--all-values'],
                           'merl-to-alta-all-values-binary')
 env.Depends(cmd05, downloadGold)
-env.Alias('tests', cmd05)
 
 
 cmd06 = make_command_test('data2data',
@@ -406,7 +395,6 @@ cmd06 = make_command_test('data2data',
                            '--all-values'],
                           'alta-binary-to-alta2')
 env.Depends(cmd06, cmd05)
-env.Alias('tests', cmd06)
 
 cmd07 = env.Command('data2data-merl-to-alta-binary-to-alta.log',
                     test_byproduct('gold-metallic-paint3.alta'),
@@ -415,7 +403,6 @@ cmd07 = env.Command('data2data-merl-to-alta-binary-to-alta.log',
 
 env.Depends(cmd07, cmd00)
 env.Depends(cmd07, cmd06)
-env.Alias('tests', cmd07)
 
 
 # ADD C++ Test if the two previous tests have passed and if Catch submodule is available
@@ -441,8 +428,6 @@ if have_openexr:
                            'exr-export')
   env.Depends(cmd5, cmd1)
   env.Depends(cmd5, downloadGold)
-  AlwaysBuild(cmd5)
-  env.Alias('tests', cmd5)
 
   cmd6 = make_command_test('data2data',
                            ['--input',
@@ -452,8 +437,6 @@ if have_openexr:
                             test_byproduct('gold-metallic-paint.data')],
                            'exr-to-internal')
   env.Depends(cmd6, cmd5)
-  AlwaysBuild(cmd6)
-  env.Alias('tests', cmd6)
 
   cmd7 = make_command_test('data2data',
                            ['--input',
@@ -465,8 +448,6 @@ if have_openexr:
                             test_byproduct('gold-metallic-paint.rusin.exr')],
                            'merl-to-data-slice-rusin')
   env.Depends(cmd7, downloadGold)
-  AlwaysBuild(cmd7)
-  env.Alias('tests', cmd7)
 
   cmd8 = make_command_test('data2data',
                            ['--input',
@@ -478,8 +459,6 @@ if have_openexr:
                             test_byproduct('gold-metallic-paint.rusin.exr')],
                            'merl-to-data-slice-rusin3d')
   env.Depends(cmd8, downloadGold)
-  AlwaysBuild(cmd8)
-  env.Alias('tests', cmd8)
 
   #-------------------------------------------------------------------------------------------------
   # Rational Fitting Tests
@@ -496,8 +475,6 @@ if have_openexr:
                             '--np', '100', '--nq', '50'],
                            'least-square-fit')
   env.Depends(cmd9, cmd6)
-  AlwaysBuild(cmd9)
-  env.Alias('tests', cmd9)
 
 
   # 1D Rational Fitting with Quadprog.  absolute interval set to 0.05
@@ -515,8 +492,6 @@ if have_openexr:
                               '--np', '20', '--nq', '20'],
                              'rational-fit-1d-quadprog')
 
-    AlwaysBuild(cmd90)
-    env.Alias('tests',cmd90)
 
     abspath_to_fit_file1    = test_byproduct('Test_Smooth_Step_1d_no_vs.func')
     abspath_to_no_reg_file1 = test_data_directory + os.sep + 'non_reg_fit_Test_Smooth_Step_1d_no_vs.func'
@@ -528,8 +503,8 @@ if have_openexr:
 
 
     AlwaysBuild(cmd900)
-    env.Depends(cmd900, cmd90)
     env.Alias('tests', cmd900)
+    env.Depends(cmd900, cmd90)
 
     # # Comparisons of the fitting results with the expected and stored results (non-regression)
     cmd901 = env.Command( 'no_regress_rational-fit-1d-quadprog.log',
@@ -537,8 +512,8 @@ if have_openexr:
                           check_fitting_files( abspath_to_fit_file1, abspath_to_no_reg_file1, 'Linf',1e-5))
 
     AlwaysBuild(cmd901)
-    env.Depends(cmd901, cmd900)
     env.Alias('tests', cmd901)
+    env.Depends(cmd901, cmd900)
   #if_end
 
 
@@ -555,8 +530,6 @@ if have_openexr:
                               '--np', '20', '--nq', '20'],
                              'rational-fit-1d-quadprog-symetric-vs')
 
-    AlwaysBuild(cmd91)
-    env.Alias('tests',cmd91)
 
     abspath_to_fit_file2 = test_byproduct('Test_Smooth_Step_1d_symetric_vs.func')
 
@@ -584,8 +557,6 @@ if have_openexr:
                               '--np', '20', '--nq', '20'],
                              'rational-fit-1d-quadprog-Asymetric-vs')
 
-    AlwaysBuild(cmd92)
-    env.Alias('tests',cmd92)
 
     abspath_to_fit_file3 = test_byproduct('Test_Smooth_Step_1d_Asymetric_vs.func')
     abspath_to_no_reg_file3 = test_data_directory + os.sep + 'non_reg_fit_Test_Smooth_Step_1d_Asymetric_vs.func'
@@ -617,8 +588,6 @@ if have_openexr:
                                               test_byproduct('m100_fabric140-3.exr')],
                                               'data2data-utia-to-utia')
 
-    AlwaysBuild(cmd_utia_idempotence);
-    env.Alias('tests', cmd_utia_idempotence)
 
     cmd_utia_1 = make_command_test('data2data',
                                    ['--input',
@@ -629,8 +598,6 @@ if have_openexr:
                                     test_byproduct('m100_fabric140.binary')],
                                     'data2data-utia-to-merl')
 
-    AlwaysBuild(cmd_utia_1);
-    env.Alias('tests', cmd_utia_1)
 
     cmd_utia_2 = make_command_test('data2data',
                                    ['--input',
@@ -640,9 +607,7 @@ if have_openexr:
                                     '--output',
                                     test_byproduct('m100_fabric140-2.exr')],
                                     'data2data-merl-to-utia')
-    AlwaysBuild(cmd_utia_2);
     env.Depends(cmd_utia_2, cmd_utia_1)
-    env.Alias('tests', cmd_utia_2)
 
     cmd_utia_check = make_command_test('data2stats',
                                        ['--input',
@@ -653,9 +618,7 @@ if have_openexr:
                                         '--ref-data', 'data_utia'],
                                         'data2stats-utia-check');
 
-    AlwaysBuild(cmd_utia_check);
     env.Depends(cmd_utia_check, cmd_utia_2)
-    env.Alias('tests', cmd_utia_check)
 
     #TODO PARSE THE OUTPUT of cmd_utia_check to see of the Linf norm is < 1e-5 if yes test passes
     # if not test fails
@@ -686,8 +649,6 @@ if have_openexr:
                                '--fitter', 'nonlinear_fitter_eigen'],
                               'nonlinear-eigen-fit')
     env.Depends(cmd10, cmd6)
-    AlwaysBuild(cmd10)
-    env.Alias('tests', cmd10)
 
     cmd11 = make_command_test('brdf2data',
                               ['--input',
@@ -699,11 +660,7 @@ if have_openexr:
                                '--data', 'vertical_segment'],
                               'compound-function-to-vs')
     env.Depends(cmd11, cmd10)
-    # DO NOT SEE WHY cmd11 should depend cmd9
-    #env.Depends(cmd11, cmd9)
     env.Depends(cmd11, cmd6)
-    AlwaysBuild(cmd11)
-    env.Alias('tests', cmd11)
 
 
 #end_of_if_have_exr
@@ -717,7 +674,6 @@ cmd20 = make_command_test('data2data',
                           test_byproduct('krylon.alta')],
                          'cornell-to-vs')
 env.Depends(cmd20, downloadKrylon)
-AlwaysBuild(cmd20)
 
 
 # Print a summary of the tests.
