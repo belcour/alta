@@ -14,15 +14,18 @@ install:
 before_build:
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 
+# Build script
+#
 build_script:
+   # Build first time
   - git submodule init
   - git submodule update
   - scons
 
-  # Build externals #
+  # Build externals
   - cd external
 
-  # Install CERES #
+  # Install CERES
   - git clone https://ceres-solver.googlesource.com/ceres-solver
   - cd ceres-solver
   - mkdir build
@@ -31,9 +34,16 @@ build_script:
   - nmake install
   - cd ..\..\..
 
-  # Rebuild #
-  - scons -i
+  # Rebuild
+  - scons
+  - appveyor PushArtifact config.log
 
-  # Generate product #
+  # Generate product
   - makensis sources\scripts\installer.nsi
   - appveyor PushArtifact sources\scripts\ALTA.exe
+
+
+# Perform custom tests
+#
+test_script:
+  - scons tests

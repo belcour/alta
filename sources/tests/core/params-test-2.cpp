@@ -17,6 +17,7 @@ using namespace alta;
 using namespace alta::tests;
 
 #include <cmath>
+#include <ctime>
 #include <cstdlib>
 #include <iostream>
 #include <random>
@@ -34,7 +35,7 @@ int main(int argc, char** argv)
 
   // Testing is Above with Cartesians Configurations
   std::uniform_real_distribution<> distribution(-1.0, 1.0);
-  GENERATOR_TYPE                      generator( time(NULL) );
+  GENERATOR_TYPE                      generator( std::time(NULL) );
 
   vec input_lv(6);
   for (unsigned int i = 0; i < NB_TESTS; ++i)
