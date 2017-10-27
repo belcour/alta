@@ -155,29 +155,17 @@ class BrdfGrid : public vertical_segment {
       BrdfGrid(size_t size, const parameters& params, const arguments& args)
         : vertical_segment(params, size)
       {
-         initialize(args);
+         initialize(params, args);
       }
 
       // FIXME: Move this to constructor.
-      void initialize(const arguments& args, bool preallocate = true) {
+      void initialize(const parameters& params, const arguments& args, bool preallocate = true) {
 
          // Allow to load a different parametrization depending on the
          // parameters provided.
-         params::input in_param;
-         params::output out_param;
-         int nX, nY;
-
-         if(args.is_defined("PARAM_IN")) {
-            in_param = params::parse_input(args["PARAM_IN"]);
-         } else if(args.is_defined("param")) {
-            in_param = params::parse_input(args["param"]);
-         }
-         nX = params::dimension(in_param);
-
-         if(args.is_defined("PARAM_OUT")) {
-            out_param = params::parse_output(args["PARAM_OUT"]);
-         }
-         nY = params::dimension(out_param);
+         const params::input  in_param  = params.input_parametrization();
+         const params::output out_param = params.output_parametrization();
+         const int nX = params.dimX(), nY = params.dimY();
 
          // Get the grid size, by default use an 10^dimX grid
          int N = 1;
@@ -311,7 +299,7 @@ class BrdfGrid : public vertical_segment {
          vertical_segment::set(id, x);
       }
 
-      vec value(const vec& x) const
+      virtual vec value(const vec& x) const
       {
          // Get the base index
          const auto k = get_indices(x);
@@ -370,16 +358,10 @@ ALTA_DLL_EXPORT data* load_data(std::istream& input,
 #ifdef __GNUC__
 # warning FIXME we are not returning a "BrdfGrid"
 #endif
-    // We should probably rewrite this class as a transformation from 'data'
-    // to 'data'.
 
+    std::cerr << "<<Unfinished>> the data_grid loader should provide a grid object." << std::endl;
+    std::cerr << "               see " << __FILE__ << " line " << __LINE__ << std::endl;
     abort();
-#if 0
-    BrdfGrid* result = new BrdfGrid(args);
-
-    // XXX: Should be done in constructor.
-    result->initialize(header, false);
-#endif
 
     return load_data_from_text(input, header);
 }
