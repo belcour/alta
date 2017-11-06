@@ -75,7 +75,7 @@ vars.Add('INSTALL_PREFIX',    'Parent installation directory',
 vars.Add('CXX',               'C++ compiler',
          default = program_file_name(cxx_compilers))
 vars.Add('CCFLAGS',           'Compiler\'s flags',
-         default = '-std=c++11 -g -Wall')
+         default = '-std=c++11 -Og -g -Wall')
 vars.Add('LINKFLAGS',         'Linker\'s flags',
          default = '')
 vars.Add('EIGEN_INC',         'Eigen include directory (mandatory)')
