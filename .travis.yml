@@ -32,3 +32,5 @@ script:
    - scons tests
    #- scons tests python -i
 
+after_failure:
+   - cat config.log
