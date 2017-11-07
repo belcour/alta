@@ -90,3 +90,4 @@ target_compile_features(test_data_io PRIVATE cxx_range_for)
 
 enable_testing()
 add_test(data_io test_data_io)
+set_tests_properties(data_io PROPERTIES ENVIRONMENT "TEST_DATA_DIRECTORY=${CMAKE_SOURCE_DIR}/sources/tests")
