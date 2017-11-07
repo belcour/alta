@@ -256,13 +256,13 @@ int main(int argc, char** argv)
 
         // Now use the binary output format.
         std::ofstream out;
-        out.open(temp_file3.name().c_str(), std::ofstream::binary);
+        out.open(temp_file3.name().c_str(), std::ios::out | std::ios::binary);
         save_data_as_binary(out, *sample2);
         out.close();
 
         // This should automatically load using the binary format loader.
         std::ifstream temp3;
-        temp3.open(temp_file3);
+        temp3.open(temp_file3, std::ios::in | std::ios::binary);
         auto sample3 = plugins_manager::load_data("vertical_segment", temp3);
 
         TEST_ASSERT(sample1->equals(*sample2));
