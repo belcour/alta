@@ -502,7 +502,7 @@ class arguments
 									linestream.get();
 								}
 
-								getline(linestream, data);
+								getline(linestream, data, '\r');
 								args.update(key, data) ;
 							}
 						}
