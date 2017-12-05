@@ -325,7 +325,7 @@ double solve_quadprog_with_guess(Ref<const MatrixXd> L, Ref<const VectorXd> g0,
       }
     }
 
-    if (std::abs(psi) <= (chunk_size-iq) * std::numeric_limits<double>::epsilon() * c1 * c2 * 100.0)
+    if (std::abs(psi) <= std::max(chunk_size,iq) * std::numeric_limits<double>::epsilon() * c1 * c2 * 100.0)
     {
       if(!done_with_active_set)
       {
