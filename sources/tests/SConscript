@@ -676,6 +676,94 @@ cmd20 = make_command_test('data2data',
 env.Depends(cmd20, downloadKrylon)
 
 
+
+#=======================================================================================================================
+#
+# 1D Rational Fitting with Quadprog and Kirby2.dat for different scheduling stategies
+#
+# Non Regression Files: nonreg_fit_kirby2_qp_worstfirst.txt and nonreg_fit_kirby2_qp_slidingwindows.txt
+# nonreg_fit_kirby2_qp_slidingwindows.txt
+#
+#
+#  Theses tests depends on : test_file is Kirby2.dat
+#                             Rational fitter plugins (eigen and quadprob and least-square)
+#=======================================================================================================================
+if os.path.isfile(test_file):
+
+  cmd100 = make_command_test('data2brdf',
+                             ['--input',
+                              test_file,
+                              '--output',
+                              test_byproduct('Test_fit_kirby2_qp_slidingwindows.func'),
+                              '--fitter', 'rational_fitter_quadprog',
+                              '--scheduling-mode', 'SlidingWindows'
+                              '--min-np', '10', '--min-nq', '10',
+                              '--np', '10', '--nq', '10'],
+                             'rational-fit-1d-quadprog-kirby2-slidingwindows')
+
+
+  abspath_to_fit_file_100 = test_byproduct('Test_fit_kirby2_qp_slidingwindows.func')
+  abspath_to_no_reg_file_100 = test_data_directory + os.sep + 'nonreg_fit_kirby2_qp_slidingwindows.txt'
+
+
+  cmd101 = env.Command( 'no_regress scheduling windows rational-fit-1d-quadprog.log',
+                        abspath_to_fit_file_100,
+                        check_fitting_files( abspath_to_fit_file_100, abspath_to_no_reg_file_100, 'Linf',1e-5))
+
+  env.Depends(cmd101, cmd100)
+  env.Alias('tests', cmd101)
+
+
+
+
+  cmd110 = make_command_test('data2brdf',
+                             ['--input',
+                              test_file,
+                              '--output',
+                              test_byproduct('Test_fit_kirby2_qp_worstsetfirst.func'),
+                              '--fitter', 'rational_fitter_quadprog',
+                              '--scheduling-mode', 'WorstSetFirst'
+                              '--min-np', '10', '--min-nq', '10',
+                              '--np', '10', '--nq', '10'],
+                             'rational-fit-1d-quadprog-kirby2-worstsetfirst')
+
+
+  abspath_to_fit_file_110 = test_byproduct('Test_fit_kirby2_qp_worstsetfirst.func')
+  abspath_to_no_reg_file_111 = test_data_directory + os.sep + 'nonreg_fit_kirby2_qp_worstsetfirst.txt'
+
+
+  cmd111 = env.Command( 'no_regress scheduling worst set first rational-fit-1d-quadprog.log',
+                        abspath_to_fit_file_100,
+                        check_fitting_files( abspath_to_fit_file_110, abspath_to_no_reg_file_111, 'Linf',1e-5))
+
+  env.Depends(cmd111, cmd110)
+  env.Alias('tests', cmd111)
+
+
+  cmd120 = make_command_test('data2brdf',
+                             ['--input',
+                              test_file,
+                              '--output',
+                              test_byproduct('Test_fit_kirby2_qp_worstfirst.func'),
+                              '--fitter', 'rational_fitter_quadprog',
+                              '--min-np', '10', '--min-nq', '10',
+                              '--np', '10', '--nq', '10'],
+                             'rational-fit-1d-quadprog-kirby2-worstfirst')
+
+
+  abspath_to_fit_file_110 = test_byproduct('Test_fit_kirby2_qp_worstfirst.func')
+  abspath_to_no_reg_file_111 = test_data_directory + os.sep + 'nonreg_fit_kirby2_qp_worstfirst.txt'
+
+
+  cmd121 = env.Command( 'no_regress scheduling worst first rational-fit-1d-quadprog.log',
+                        abspath_to_fit_file_100,
+                        check_fitting_files( abspath_to_fit_file_110, abspath_to_no_reg_file_111, 'Linf',1e-5))
+
+  env.Depends(cmd121, cmd120)
+  env.Alias('tests', cmd121)
+
+#endif_if Kirby2.dat is available
+
 # Print a summary of the tests.
 
 def display_test_name(node):
