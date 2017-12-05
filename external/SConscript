@@ -49,13 +49,14 @@ qp_dir     = 'quadprog++'
 qp_target  = 'build' + os.sep + 'lib' + os.sep + qp_dir
 qp_base    = qp_dir + os.sep
 qp_sources = [qp_base + 'QuadProg++.cc']
-qp_ccflags = ''
+# BY DEFAULT WE PROPAGATE THE Scons environment from the main SConscript file
+qp_ccflags = env['CCFLAGS']
 
 if env['CC'] != 'cl':
   # We're not building a real static library, but rather what Libtool
   # calls a "convenience library": an archive that contains PIC code.
   # Thus, force '-fPIC'.
-  qp_ccflags = '-fPIC'
+  qp_ccflags += ' -fPIC'
 
 env.StaticLibrary(target = qp_target, source = qp_sources,
                   CCFLAGS = qp_ccflags,
