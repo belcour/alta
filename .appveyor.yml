@@ -30,7 +30,7 @@ build_script:
   - cd ceres-solver
   - mkdir build
   - cd build
-  - cmake .. -DBUILD_SHARED_LIBS=OFF -DMINIGLOG=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=ON -DCMAKE_INSTALL_PREFIX="..\..\build" -DEIGEN_INCLUDE_DIR="..\..\build\include" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
+  - cmake .. -DBUILD_SHARED_LIBS=ON -DMINIGLOG=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="..\..\build" -DEIGEN_INCLUDE_DIR="..\..\build\include" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
   - nmake install
   - cd ..\..\..
 

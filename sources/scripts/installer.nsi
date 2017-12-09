@@ -52,6 +52,7 @@ Section "ALTA" SecMain
 
   SetOutPath $INSTDIR\bin
   File "${ALTADIR}\build\softs\*.exe"
+  File "${ALTADIR}\external\build\bin\*.dll"
 
   SetOutPath $INSTDIR\lib
   File "${ALTADIR}\build\core\core.lib"
