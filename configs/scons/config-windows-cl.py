@@ -61,7 +61,7 @@ QUADPROG_LIB      = ['quadprog++']
 ## You have to specify both the directory of the CERES library
 ## and the glog library
 ##
-CERES_INC      = ['#external/build/include']
+CERES_INC      = ['#external/build/include', '#external/build/include/ceres/internal/miniglog']
 CERES_DIR      = ['#external/build/lib']
 CERES_LIB      = ['ceres']
 CERES_OPT_LIB  = ['glog', 'gomp', 'lapack', 'blas']
