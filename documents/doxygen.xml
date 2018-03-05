@@ -3,11 +3,12 @@
 		<tab type="mainpage" visible="yes" title="Overview"/>
 		<tab type="user" url="@ref features" title="Features"/>
 		<tab type="user" url="@ref install" title="Installation"/>
-		<tab type="user" url="@ref tutorials" title="Tutorials"/>
-    <tab type="user" url="@ref documentation" title="API &amp; References" />
-    <tab type="user" url="@ref tools" title="Tools"/>
-    <tab type="user" url="@ref data" title="Data"/>
-		<tab type="user" url="@ref license" title="License"/>
+      <tab type="user" url="@ref tutorials" title="Tutorials"/>
+      <tab type="user" url="@ref documentation" title="API &amp; References" />
+      <tab type="user" url="@ref tools" title="Tools"/>
+      <tab type="user" url="@ref data" title="Data"/>
+      <tab type="user" url="@ref license" title="License"/>
+      <tab type="user" url="@ref contribute" title="Contribute"/>
 		<tab type="user" url="@ref contacts" title="Contacts"/>
 	</navindex>
 
