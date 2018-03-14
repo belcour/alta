@@ -51,9 +51,7 @@ if library_available(env, pkgspec='python-2.7',
     build_lib = conf.CheckLibWithHeader('boost_python',
                                         'boost/python.hpp', 'c++')
 
-  if build_lib and not conf.CheckBoostPython():
-    build_lib = False;
-
+  build_lib = conf.CheckBoostPython();
   env = conf.Finish()
 
 
@@ -69,6 +67,7 @@ if build_lib:
   env.Alias('python',
             env.SharedLibrary('#build/python/alta', ['alta.cpp']))
 else:
-  raise Errors.BuildError(errstr = "Unable to build the Python wrapper",
-                          filename = 'alta.cpp',
-                          exitstatus = 1)
+  env.Alias('python', [])
+#  raise Errors.BuildError(errstr = "Unable to build the Python wrapper",
+#                          filename = 'alta.cpp',
+#                          exitstatus = 1)

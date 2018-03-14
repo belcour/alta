@@ -12,7 +12,9 @@ install:
   - cinst nsis.portable
 
 before_build:
+  # BOOST Python require x86 compilation
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+  #- call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 
 # Build script
 #
@@ -20,22 +22,28 @@ build_script:
    # Build first time
   - git submodule init
   - git submodule update
-  - scons
 
   # Build externals
-  - cd external
+  # First we need to build ALTA to get Eigen
+  #- dir C:\Python27\libs
+  #- dir C:\Libraries\boost_1_63_0
+  #- dir C:\Libraries\boost_1_63_0\lib64-msvc-14.0
+  - scons --cfg=./configs/scons/config-windows-appveyor.py
+  - appveyor PushArtifact config.log
 
   # Install CERES
+  - cd external
   - git clone https://ceres-solver.googlesource.com/ceres-solver
   - cd ceres-solver
-  - mkdir build
-  - cd build
+  - mkdir build-ceres
+  - cd build-ceres
   - cmake .. -DBUILD_SHARED_LIBS=ON -DMINIGLOG=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="..\..\build" -DEIGEN_INCLUDE_DIR="..\..\build\include" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
   - nmake install
   - cd ..\..\..
 
-  # Rebuild
-  - scons
+  # Rebuild with CERES and Python
+  - scons --cfg=./configs/scons/config-windows-appveyor.py
+  #- scons --cfg=./configs/scons/config-windows-appveyor.py python
   - appveyor PushArtifact config.log
 
   # Generate product
@@ -46,4 +54,12 @@ build_script:
 # Perform custom tests
 #
 test_script:
-  - scons tests
+  - ./setpath.bat
+  - scons --cfg=./configs/scons/config-windows-appveyor.py tests
+  #- scons --cfg=./configs/scons/config-windows-appveyor.py python tests
+
+artifacts:
+   - path: sources\scripts\ALTA.exe
+     name: ALTA
+   - path: config.log
+     name: Log
