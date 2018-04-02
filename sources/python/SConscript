@@ -5,29 +5,32 @@ Import('env', 'library_available')
 env = env.Clone()
 env.Prepend(LIBS = ['core'])
 
+## Add pybind path
+env.AppendUnique(CPPPATH = '#external/pybind11/include/')
+
 ## Building a test function for boost::python
 ##
 bp_test_source = """
 // STL and Boost includes
 #include <memory>
-#include <boost/python.hpp>
+#include <pybind11/pybind11.h>
 
 // ALTA includes
+#include <core/common.h>
 #include <core/ptr.h>
 #include <core/function.h>
 
-int main(int argc, char** argv) {
+namespace py = pybind11;
 
-	boost::python::class_<alta::function, alta::ptr<alta::function>, boost::noncopyable>("function", boost::python::no_init);
-   boost::python::register_ptr_to_python<alta::ptr<alta::function>>();
-
-   return 0;
+PYBIND11_MODULE(example, m) {
+    m.doc() = "pybind11 example plugin"; // optional module docstring
+    m.def("norm", &norm, "Compute the norm of vector 'v'", py::arg("v"));
 }
 """
 
 def CheckBoostPython(context):
    context.Message('Checking boost::python using small example...')
-   result = context.TryLink(bp_test_source, '.cpp')
+   result = context.TryCompile(bp_test_source, '.cpp')
    context.Result(result)
    return result
 
@@ -41,16 +44,6 @@ if library_available(env, pkgspec='python-2.7',
                      lib='PYTHON_LIB', header='Python.h'):
 
   conf = Configure(env, custom_tests = {'CheckBoostPython' : CheckBoostPython})
-
-  # On GNU/Linux the '-mt' suffix is no longer used, but it is still
-  # used on some other platforms (see
-  # <http://stackoverflow.com/questions/2293962/boost-libraries-in-multithreading-aware-mode>.)
-  build_lib = conf.CheckLibWithHeader('boost_python-mt',
-                                      'boost/python.hpp', 'c++')
-  if not build_lib:
-    build_lib = conf.CheckLibWithHeader('boost_python',
-                                        'boost/python.hpp', 'c++')
-
   build_lib = conf.CheckBoostPython();
   env = conf.Finish()
 

@@ -1,10 +1,17 @@
 import alta
+import numpy
 
 fail = 0
 
-# Init the vector using the
+# Init the vector using an input array
+# Also test if the _getitem_ function works
 x = alta.vec([1.0, 1.0, 1.0])
 if x[0] != 1.0:
+    fail += 1
+
+# Check if _setitem_ function works
+x[0] = 0.0
+if x[0] != 0.0:
     fail += 1
 
 # Vector arithmetic
@@ -20,13 +27,20 @@ print "Testing 'str' method on variable 'y': " + str(y)
 if len(y) != 3:
     fail += 1
 
-# Convertion to a list
+# Conversion to a list
 l = list(y)
 if len(l) != len(y):
     fail += 1
 for i in range(0,len(y)):
     if l[i] != y[i]:
         fail += 1
+
+# Conversion to a numpy array
+na = numpy.array(y)
+for i in range(0,len(y)):
+    if na[i] != y[i]:
+        fail += 1
+
 
 # Print the test result
 if fail > 0:

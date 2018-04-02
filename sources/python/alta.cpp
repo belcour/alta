@@ -9,8 +9,9 @@
    License, v. 2.0.  If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/.  */
 
-// Boost includes
-#include <boost/python.hpp>
+// Pybind11 includes
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
 
 // ALTA include
 #include <core/common.h>
@@ -25,57 +26,13 @@
 #include <iostream>
 
 // Local includes
-#include "wrapper_vec.hpp"
-
-#define bp boost::python
+#include "wrapper_args.h"
+#include "wrapper_vec.h"
+#include "wrapper_data.h"
 
 using namespace alta;
 
-/* This class is a wrapper to ALTA's arguments class to add Python specific
- * behaviour such as dictionnary initialization.
- *
- * Right now it does not handle automatic conversion in function call for
- * example. The following code is not possible:
- *
- *    import alta
- *    alta.get_data('data_merl', {'params' : 'STARK_2D'})
- *
- * Instead, one has to construct the arguments object from the ALTA library
- * to use it afterwards:
- *
- *    import alta
- *    args = alta.arguments({'params' : 'STARK_2D'})
- *    alta.get_data('data_merl', args)
- */
-struct python_arguments : public arguments {
-	python_arguments() : arguments() {}
-	python_arguments(bp::dict d) : arguments() {
-		bp::list keys = d.keys();
-		for(int i=0; i<bp::len(keys); ++i) {
-			const std::string s_key = bp::extract<std::string>(keys[i]);
-			const std::string s_val = bp::extract<std::string>(d[keys[i]]);
-			this->update(s_key, s_val);
-		}
-	}
-};
 
-/* Create a data object from a plugin's name and the data filename. This
- * function is here to accelerate the loading of data file.
- */
-static ptr<data> load_data(const std::string& plugin_name, const std::string& filename) {
-  ptr<data> d = plugins_manager::load_data(filename, plugin_name);
-	return d;
-}
-static ptr<data> get_data_with_args(const std::string& plugin_name,
-                                    size_t size,
-                                    const parameters& params,
-                                    const python_arguments& args) {
-  return plugins_manager::get_data(plugin_name, size, params, args);
-}
-static ptr<data> get_data(const std::string& plugin_name, size_t size,
-                          const parameters& params) {
-  return plugins_manager::get_data(plugin_name, size, params);
-}
 
 /* Creating functions for the plugins_manager calls
  *
@@ -335,137 +292,110 @@ static void brdf2data(const ptr<function>& f, ptr<data>& d) {
 
 /* Compute distance metric between 'in' and 'ref'.
  */
-static bp::dict data2stats(const ptr<data>& in, const ptr<data>& ref) {
+static py::dict data2stats(const ptr<data>& in, const ptr<data>& ref) {
    // Compute the metrics
    errors::metrics res;
    errors::compute(in.get(), ref.get(), nullptr, res);
 
    // Fill the resulting Python vector
-   bp::dict py_res;
+   py::dict py_res;
    for(auto rpair : res) {
-      py_res.setdefault<std::string, vec>(rpair.first, rpair.second);
+      py_res[py::str(rpair.first)] = rpair.second;
    }
    return py_res;
 }
 
+inline void register_function(py::module& m) {
+	py::class_<function, ptr<function>>(m, "function")
+		.def("__add__",  &add_function)
+		.def("__mul__",  &mult_function)
+		.def("__rmul__", &mult_function)
+		.def("value",    &function::value)
+		.def("load",     &load_from_file)
+		.def("load",     &load_from_file_with_args)
+		.def("save",     &function::save)
+        .def("save",     &save_function_without_args)
+		.def("set",      &set_function_params)
+		.def("get",      &get_function_params);
+	m.def("get_function", get_function, py::arg("name") = "nonlinear_diffuse",
+                                        py::arg("param") = parameters(6, 3, params::CARTESIAN, params::RGB_COLOR));
+	m.def("get_function", get_function_from_args);
+	m.def("load_function", load_function);
+	m.def("load_function", load_function_with_args);
+}
+
+inline void register_fitter(py::module& m) {
+	py::class_<fitter, ptr<fitter>>(m, "fitter")
+		.def("fit_data", &fit_data_with_args)
+        .def("fit_data", &fit_data_without_args);
+	m.def("get_fitter",  plugins_manager::get_fitter);
+}
 
 #define STRINGIFY_(x) #x
 #define STRINGIFY(x)  STRINGIFY_(x)
 
-/* Exporting the ALTA module
- */
-BOOST_PYTHON_MODULE(alta)
-{
-	// Argument class
-	//
-	bp::class_<arguments>("_arguments");
-	bp::class_<python_arguments, bp::bases<arguments>>("arguments")
-		.def(bp::init<>())
-		.def(bp::init<bp::dict>())
-      .def("__getitem__", &arguments::operator[])
-		.def("update", &arguments::update);
+PYBIND11_MODULE(alta, m) {
+    m.doc() = "ALTA python bindinds";
+    m.def("norm", &norm, "Compute the norm of vector 'v'", py::arg("v"));
 
-
-  // Vec class
-  //
-  register_wrapper_vec();
-
-  // 'parameters' class.
-  bp::class_<parameters>("parameters")
-      .def(bp::init<unsigned int, unsigned int, params::input, params::output>());
-
-  // Parameterization enums.
+    /* Register the 'parameters' class and the enums */
+    py::class_<parameters>(m, "parameters")
+      .def(py::init<unsigned int, unsigned int, params::input, params::output>());
 
 #define PARAM_VALUE(name)                       \
    .value(STRINGIFY(name), params:: name)
 
-  bp::enum_<params::input>("input_parametrization")
-      PARAM_VALUE(RUSIN_TH_PH_TD_PD)
-      PARAM_VALUE(RUSIN_TH_PH_TD)
-      PARAM_VALUE(RUSIN_TH_TD_PD)
-      PARAM_VALUE(RUSIN_TH_TD)
-      PARAM_VALUE(RUSIN_VH_VD)
-      PARAM_VALUE(RUSIN_VH)
-      PARAM_VALUE(COS_TH_TD)
-      PARAM_VALUE(COS_TH)
-      PARAM_VALUE(SCHLICK_TK_PK)
-      PARAM_VALUE(SCHLICK_VK)
-      PARAM_VALUE(SCHLICK_TL_TK_PROJ_DPHI)
-      PARAM_VALUE(COS_TK)
-      PARAM_VALUE(RETRO_TL_TVL_PROJ_DPHI)
-      PARAM_VALUE(STEREOGRAPHIC)
-      PARAM_VALUE(SPHERICAL_TL_PL_TV_PV)
-      PARAM_VALUE(COS_TLV)
-      PARAM_VALUE(COS_TLR)
-      PARAM_VALUE(ISOTROPIC_TV_TL)
-      PARAM_VALUE(ISOTROPIC_TV_TL_DPHI)
-      PARAM_VALUE(ISOTROPIC_TV_PROJ_DPHI)
-      PARAM_VALUE(ISOTROPIC_TL_TV_PROJ_DPHI)
-      PARAM_VALUE(ISOTROPIC_TD_PD)
-      PARAM_VALUE(STARK_2D)
-      PARAM_VALUE(STARK_3D)
-      PARAM_VALUE(NEUMANN_2D)
-      PARAM_VALUE(NEUMANN_3D)
-      PARAM_VALUE(CARTESIAN)
-      PARAM_VALUE(UNKNOWN_INPUT);
+   py::enum_<params::input>(m, "input_parametrization")
+        PARAM_VALUE(RUSIN_TH_PH_TD_PD)
+        PARAM_VALUE(RUSIN_TH_PH_TD)
+        PARAM_VALUE(RUSIN_TH_TD_PD)
+        PARAM_VALUE(RUSIN_TH_TD)
+        PARAM_VALUE(RUSIN_VH_VD)
+        PARAM_VALUE(RUSIN_VH)
+        PARAM_VALUE(COS_TH_TD)
+        PARAM_VALUE(COS_TH)
+        PARAM_VALUE(SCHLICK_TK_PK)
+        PARAM_VALUE(SCHLICK_VK)
+        PARAM_VALUE(SCHLICK_TL_TK_PROJ_DPHI)
+        PARAM_VALUE(COS_TK)
+        PARAM_VALUE(RETRO_TL_TVL_PROJ_DPHI)
+        PARAM_VALUE(STEREOGRAPHIC)
+        PARAM_VALUE(SPHERICAL_TL_PL_TV_PV)
+        PARAM_VALUE(COS_TLV)
+        PARAM_VALUE(COS_TLR)
+        PARAM_VALUE(ISOTROPIC_TV_TL)
+        PARAM_VALUE(ISOTROPIC_TV_TL_DPHI)
+        PARAM_VALUE(ISOTROPIC_TV_PROJ_DPHI)
+        PARAM_VALUE(ISOTROPIC_TL_TV_PROJ_DPHI)
+        PARAM_VALUE(ISOTROPIC_TD_PD)
+        PARAM_VALUE(STARK_2D)
+        PARAM_VALUE(STARK_3D)
+        PARAM_VALUE(NEUMANN_2D)
+        PARAM_VALUE(NEUMANN_3D)
+        PARAM_VALUE(CARTESIAN)
+        PARAM_VALUE(UNKNOWN_INPUT);
 
-  bp::enum_<params::output>("output_parametrization")
-      PARAM_VALUE(INV_STERADIAN)
-      PARAM_VALUE(INV_STERADIAN_COSINE_FACTOR)
-      PARAM_VALUE(ENERGY)
-      PARAM_VALUE(RGB_COLOR)
-      PARAM_VALUE(XYZ_COLOR)
-      PARAM_VALUE(UNKNOWN_OUTPUT);
+    py::enum_<params::output>(m, "output_parametrization")
+        PARAM_VALUE(INV_STERADIAN)
+        PARAM_VALUE(INV_STERADIAN_COSINE_FACTOR)
+        PARAM_VALUE(ENERGY)
+        PARAM_VALUE(RGB_COLOR)
+        PARAM_VALUE(XYZ_COLOR)
+        PARAM_VALUE(UNKNOWN_OUTPUT);
 
 #undef PARAM_VALUE
 
-  bp::register_ptr_to_python<ptr<parameters>>();
+    /* Register the `args` and `vec` types */
+    register_args(m);
+    register_vec(m);
 
-	// Function interface
-	//
-	bp::class_<function, ptr<function>, boost::noncopyable>("function", bp::no_init)
-		.def("__add__", &add_function)
-		.def("__mul__", &mult_function)
-		.def("__rmul__", &mult_function)
-		.def("value", &function::value)
-		.def("load", &load_from_file)
-		.def("load", &load_from_file_with_args)
-		.def("save",  &function::save)
-      .def("save", &save_function_without_args)
-		.def("set", &set_function_params)
-		.def("get", &get_function_params);
-	bp::def("get_function", get_function);
-	bp::def("get_function", get_function_from_args);
-	bp::def("load_function", load_function);
-	bp::def("load_function", load_function_with_args);
-   bp::register_ptr_to_python<ptr<function>>();
+    /* register the `data`, `function` and `fitter` objects */
+    register_data(m);
+    register_function(m);
+    register_fitter(m);
 
-
-
-	// Data interface
-	//
-	bp::class_<data, ptr<data>, boost::noncopyable>("data", bp::no_init)
-		.def("size", &data::size)
-		.def("get",  &data::get)
-		//.def("set",  &data::set)
-		.def("save", &data::save);
-	bp::def("get_data",  get_data);
-	bp::def("get_data",  get_data_with_args);
-	bp::def("load_data", load_data);
-   bp::register_ptr_to_python<ptr<data>>();
-
-
-	// Fitter interface
-	//
-	bp::class_<fitter, ptr<fitter>, boost::noncopyable>("fitter", bp::no_init)
-		.def("fit_data", &fit_data_with_args)
-      .def("fit_data", &fit_data_without_args);
-	bp::def("get_fitter", plugins_manager::get_fitter);
-   bp::register_ptr_to_python<ptr<fitter>>();
-
-	// Softs
-	//
-	bp::def("data2data",  data2data);
-	bp::def("data2stats", data2stats);
-	bp::def("brdf2data",  brdf2data);
+	/* register `softs` */
+	m.def("data2data",  data2data);
+	m.def("data2stats", data2stats);
+	m.def("brdf2data",  brdf2data);
 }
