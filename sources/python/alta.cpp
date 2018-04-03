@@ -2,6 +2,7 @@
 
    Copyright (C) 2014, 2015, 2016 Inria
    Copyright (C) 2015 Université de Montréal
+   Copyright (C) 2018 Unity
 
    This file is part of ALTA.
 

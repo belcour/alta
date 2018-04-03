@@ -1,6 +1,7 @@
 /* ALTA --- Analysis of Bidirectional Reflectance Distribution Functions
 
    Copyright (C) 2015 Université de Montréal
+   Copyright (C) 2018 Unity
 
    This file is part of ALTA.
 
@@ -63,7 +64,7 @@ inline void register_vec(py::module& m) {
 		.def("__add__", &vec_add)
 		.def("__sub__", &vec_sub)
 		.def("__len__", &vec::size)
-        .def("__getitem__", [](const vec &s, size_t i) {
+        .def("__getitem__", [](const vec &s, unsigned int i) {
             if (i >= s.size()) throw py::index_error();
             return s[i];
         })
