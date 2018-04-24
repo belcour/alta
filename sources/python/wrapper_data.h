@@ -47,12 +47,13 @@ static ptr<data> get_data(const std::string& plugin_name, size_t size,
 /* Register the `data` class to python
  */
 inline void register_data(py::module& m) {
-	py::class_<data, ptr<data>>(m, "data")
-		.def("size", &data::size)
-		.def("get",  &data::get)
-		.def("set",  &data::set)
-		.def("save", &data::save);
-	m.def("get_data",  get_data);
-	m.def("get_data",  get_data_with_args);
-	m.def("load_data", load_data);
+   py::class_<data, ptr<data>>(m, "data")
+      .def("size", &data::size)
+      .def("get",  &data::get)
+      .def("set",  &data::set)
+      .def("save", &data::save)
+      .def("parametrization", &data::parametrization);
+   m.def("get_data",  get_data);
+   m.def("get_data",  get_data_with_args);
+   m.def("load_data", load_data);
 }
