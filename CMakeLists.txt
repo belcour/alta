@@ -1,14 +1,22 @@
 cmake_minimum_required (VERSION 3.2)
-project (ALTA CXX)
+project (alta CXX)
 
 # Find required packages
-find_package(EIGEN3)
+find_package(Eigen3 REQUIRED)
+find_package(OpenMP)
 
 add_definitions(-DALTA_PLUGIN_DIRECTORY="/usr/lib/alta_plugins")
 
 # Add core and library include files
 include_directories("external/build" "sources" ${EIGEN3_INCLUDE_DIR})
 include_directories("external")
+
+# Update compilation option to include OpenMP if present
+if(OPENMP_FOUND)
+    set (CMAKE_CXX_FLAGS ${OpenMP_CXX_FLAGS})
+endif(OPENMP_FOUND)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 #############################
 #      Helper functions     #
@@ -43,6 +51,8 @@ add_library(core STATIC sources/core/common.cpp
 			sources/core/vertical_segment.cpp
 			sources/core/rational_function.cpp)
 target_compile_features(core PRIVATE cxx_range_for)
+
+target_link_libraries(core ${CMAKE_DL_LIBS})
 
 
 #############################
