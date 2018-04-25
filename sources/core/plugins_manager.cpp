@@ -24,7 +24,7 @@
 
 using namespace alta;
 
-//#define DEBUG
+//#define DEBUG_CORE
 
 
 //! Add dynamic library extension (.so or .dll) to a dynamic object as well as

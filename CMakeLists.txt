@@ -53,13 +53,23 @@ function(alta_test_unit name sources)
         add_executable(${name} sources/tests/${sources})
         target_link_libraries(${name} core)
         target_compile_features(${name} PRIVATE cxx_range_for)
-        add_test(NAME ${name} COMMAND ${CMAKE_BINARY_DIR}/tests/${name})
-        set_tests_properties(${name} PROPERTIES ENVIRONMENT "TEST_DATA_DIRECTORY=${CMAKE_SOURCE_DIR}/sources/tests")
+        add_test(NAME ${name} COMMAND ${CMAKE_BINARY_DIR}/tests/${name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+        set_tests_properties(${name} PROPERTIES ENVIRONMENT "TEST_DATA_DIRECTORY=${CMAKE_SOURCE_DIR}/sources/tests;ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
 endfunction(alta_test_unit)
 
 function(alta_test_soft name)
         add_test(NAME ${name} COMMAND ${CMAKE_BINARY_DIR}/softs/${name} --help)
 endfunction(alta_test_soft)
+
+function(alta_download_merl name)
+    find_file(${name}_FOUND "${CMAKE_BINARY_DIR}/tests/${name}.binary")
+    if(NOT ${name}_FOUND)
+        message("Dowloading ${name} from MERL database:")
+        file(DOWNLOAD
+             "http://people.csail.mit.edu/wojciech/BRDFDatabase/brdfs/${name}.binary"
+             "${CMAKE_BINARY_DIR}/tests/${name}.binary" SHOW_PROGRESS)
+    endif()
+endfunction(alta_download_merl)
 
 
 #############################
@@ -97,8 +107,8 @@ target_link_libraries(core ${CMAKE_DL_LIBS})
 #         Plugins           #
 #############################
 
+#    set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 # Data
 alta_add_plugin(data_merl data_io/merl.cpp)
@@ -117,6 +127,7 @@ if(PYTHONLIBS_FOUND AND Boost_FOUND)
     add_library(alta SHARED sources/python/alta.cpp)
     target_link_libraries(alta core ${PYTHON_LIBRARIES} ${Boost_LIBRARIES})
     target_compile_features(alta PRIVATE cxx_range_for)
+    set_target_properties(alta PROPERTIES PREFIX "")
     if(APPLE)
         set_target_properties(alta PROPERTIES SUFFIX ".so")
     endif()
@@ -162,6 +173,19 @@ if(CPPQUICKCHECK_FOUND)
     alta_test_unit(params-qc-1 core/params-qc-1.cpp)
 endif()
 
+# Integration tests using MERL data
+#find_file(MERL_GOLD_FOUND Eigen "${CMAKE_BINARY_DIR}/tests/gold-metallic-paint.binary")
+#if(MERL_GOLD_FOUND)
+#    file(DOWNLOAD
+#         "http://people.csail.mit.edu/wojciech/BRDFDatabase/brdfs/gold-metallic-paint.binary"
+#         "${CMAKE_BINARY_DIR}/tests/gold-metallic-paint.binary" SHOW_PROGRESS)
+#endif()
+alta_download_merl("gold-metallic-paint")
+add_test(NAME "data2data_gold" COMMAND "data2data" "--input" "gold-metallic-paint.binary" "--output" "gold-metallic-paint.alta" "--in-data" "data_merl" WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+set_tests_properties("data2data_gold" PROPERTIES ENVIRONMENT "TEST_DATA_DIRECTORY=${CMAKE_SOURCE_DIR}/sources/tests;ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
+
 if(CATCH_FOUND)
     alta_test_unit(conversion-catch-1 core/conversion-catch-1.cpp )
 endif()
+
+

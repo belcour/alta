@@ -485,7 +485,7 @@ int main(int argc, char* argv[])
       std::cout << "  --ref-data [plugin_name] : a valid ALTA data plugin name" << std::endl;
       std::cout << "  --in-data  [plugin_name] : a valid ALTA data plugin name" << std::endl;
 
-      return EXIT_FAILURE;
+      return EXIT_SUCCESS;
    }
 
    std::cout << "<<INFO>> Total System Memory:"
