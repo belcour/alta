@@ -122,12 +122,12 @@ target_link_libraries(core ${CMAKE_DL_LIBS})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
 
 # Data
-alta_add_plugin(data_astm   data_io/astm.cpp)
-alta_add_plugin(data_merl   data_io/merl.cpp)
-alta_add_plugin(data_utia   data_io/utia.cpp)
-alta_add_plugin(data_slice  data_io/slice.cpp)
+alta_add_plugin(data_astm       data_io/astm.cpp)
+alta_add_plugin(data_merl       data_io/merl.cpp)
+alta_add_plugin(data_utia       data_io/utia.cpp)
+alta_add_plugin(data_brdf_slice data_io/slice.cpp)
 
-alta_add_plugin(data_grid   data_interpolants/grid.cpp)
+alta_add_plugin(data_grid       data_interpolants/grid.cpp)
 if(FLANN_FOUND)
     alta_add_plugin(data_rbf    data_interpolants/rbf.cpp)
 endif()
@@ -218,11 +218,20 @@ endif()
 alta_download_merl("gold-metallic-paint")
 if(gold-metallic-paint_FOUND)
     add_test(NAME "data2data_gold"
-             COMMAND "data2data" "--input" "gold-metallic-paint.binary"
-                                 "--output" "gold-metallic-paint.alta"
+             COMMAND "data2data" "--input"   "gold-metallic-paint.binary"
+                                 "--output"  "gold-metallic-paint.alta"
                                  "--in-data" "data_merl"
              WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-    set_tests_properties("data2data_gold" PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
+
+     add_test(NAME "data2data_gold_slice"
+              COMMAND "data2data" "--input"    "gold-metallic-paint.binary"
+                                  "--output"   "gold-metallic-paint.exr"
+                                  "--in-data"  "data_merl"
+                                  "--out-data" "data_brdf_slice"
+              WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+    set_tests_properties("data2data_gold" "data2data_gold_slice"
+                         PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
 endif()
 
 if(gold-metallic-paint_FOUND AND CATCH_FOUND)
