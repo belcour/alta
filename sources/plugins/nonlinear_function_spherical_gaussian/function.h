@@ -20,6 +20,7 @@
 #include <core/fitter.h>
 #include <core/args.h>
 #include <core/common.h>
+#include <core/params.h>
 
 using namespace alta;
 
@@ -56,7 +57,7 @@ class spherical_gaussian_function : public nonlinear_function
 			Moment
 		};
 
-    spherical_gaussian_function(const parameters& params);
+    spherical_gaussian_function(const alta::parameters& params);
 
 		// Overload the function operator
 		virtual vec operator()(const vec& x) const ;

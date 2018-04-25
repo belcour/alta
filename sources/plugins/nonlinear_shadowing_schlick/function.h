@@ -33,7 +33,7 @@ class schlick_masking : public nonlinear_function
 
 	public: // methods
 
-    schlick_masking(const parameters& params);
+        schlick_masking(const alta::parameters& params);
 
 		//! \brief Load function specific files
 		virtual bool load(std::istream& in) ;
@@ -69,7 +69,6 @@ class schlick_masking : public nonlinear_function
 	private: // data
 
 		//! Fresnel reflectance at theta = 0
-		vec w;
-    schlick_masking() {};
+        vec w;
 } ;
 

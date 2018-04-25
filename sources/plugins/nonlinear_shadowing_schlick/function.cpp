@@ -18,15 +18,16 @@
 #include <cmath>
 
 #include <core/common.h>
+#include <core/params.h>
 
 using namespace alta;
 
-ALTA_DLL_EXPORT function* provide_function(const parameters& params)
+ALTA_DLL_EXPORT function* provide_function(const alta::parameters& params)
 {
 	return new schlick_masking(params);
 }
 
-schlick_masking::schlick_masking(const parameters& params)
+schlick_masking::schlick_masking(const alta::parameters& params)
     : nonlinear_function(params.set_input(6, params::CARTESIAN))
 {
     w.resize(params.dimY());
@@ -66,7 +67,7 @@ bool schlick_masking::load(std::istream& in)
     }
 
     // R [double]
-    for(int i=0; i<dimY(); ++i)
+    for(int i=0; i<_parameters.dimY(); ++i)
     {
         in >> token >> w[i];
     }
@@ -80,7 +81,7 @@ void schlick_masking::save_call(std::ostream& out, const arguments& args) const
     if(is_alta)
     {
         out << "#FUNC nonlinear_masking_schlick" << std::endl ;
-        for(int i=0; i<dimY(); ++i)
+        for(int i=0; i<_parameters.dimY(); ++i)
         {
             out << "K " << w[i] << std::endl;
         }
@@ -89,10 +90,10 @@ void schlick_masking::save_call(std::ostream& out, const arguments& args) const
     else
     {
         out << "masking_schlick(L, V, N, X, Y, vec3";
-        for(int i=0; i<dimY(); ++i)
+        for(int i=0; i<_parameters.dimY(); ++i)
         {
             out << w[i];
-            if(i < _nY-1) { out << ", "; }
+            if(i < _parameters.dimY()-1) { out << ", "; }
         }
         out << "))";
     }
@@ -122,11 +123,11 @@ void schlick_masking::save_body(std::ostream& out, const arguments& args) const
 
 vec schlick_masking::value(const vec& x) const
 {
-	vec res(dimY());
+    vec res(_parameters.dimY());
 	const double u = x[5];
 	const double v = x[2];
 
-	for(int i=0; i<dimY(); ++i)
+    for(int i=0; i<_parameters.dimY(); ++i)
 	{
 		const double Gu = u / (u + w[i] * (1.0 - u));
 		const double Gv = v / (v + w[i] * (1.0 - v));
@@ -138,35 +139,35 @@ vec schlick_masking::value(const vec& x) const
 //! \brief Number of parameters to this non-linear function
 int schlick_masking::nbParameters() const
 {
-    return dimY();
+    return _parameters.dimY();
 }
 
 vec schlick_masking::getParametersMin() const
 {
-    vec m(dimY());
-    for(int i=0; i<dimY(); ++i) { m[i] = 0.0; }
+    vec m(_parameters.dimY());
+    for(int i=0; i<_parameters.dimY(); ++i) { m[i] = 0.0; }
     return m;
 }
 
 //! \brief Get the vector of parameters for the function
 vec schlick_masking::parameters() const
 {
-    vec p(dimY());
-    for(int i=0; i<dimY(); ++i) { p[i] = w[i]; }
+    vec p(_parameters.dimY());
+    for(int i=0; i<_parameters.dimY(); ++i) { p[i] = w[i]; }
     return p;
 }
 
 //! \brief Update the vector of parameters for the function
 void schlick_masking::setParameters(const vec& p)
 {
-    for(int i=0; i<dimY(); ++i) { w[i] = p[i]; }
+    for(int i=0; i<_parameters.dimY(); ++i) { w[i] = p[i]; }
 }
 
 //! \brief Obtain the derivatives of the function with respect to the
 //! parameters.
 vec schlick_masking::parametersJacobian(const vec& x) const
 {
-	const int nY = dimY();
+    const int nY = _parameters.dimY();
 	vec jac(nY*nY);
 
 	const double u = x[5];
@@ -184,11 +185,11 @@ vec schlick_masking::parametersJacobian(const vec& x) const
 				const double dGu = - u*(1.0 - u) / pow(u + w[i]*(1.0-u), 2);
 				const double dGv = - v*(1.0 - v) / pow(v + w[i]*(1.0-v), 2);
 
-				jac[j*dimY() + i] = Gu*dGv + Gv*dGu;
+                jac[j*_parameters.dimY() + i] = Gu*dGv + Gv*dGu;
 			}
 			else 
 			{
-				jac[j*dimY() + i] = 0.0;
+                jac[j*_parameters.dimY() + i] = 0.0;
 			}
 		}
 
@@ -199,5 +200,5 @@ vec schlick_masking::parametersJacobian(const vec& x) const
 void schlick_masking::bootstrap(const ptr<data>, const arguments&)
 {
 	// Start with a non occluding value for k
-	for(int i=0; i<dimY(); ++i) { w[i] = 0.0; }
+    for(int i=0; i<_parameters.dimY(); ++i) { w[i] = 0.0; }
 }

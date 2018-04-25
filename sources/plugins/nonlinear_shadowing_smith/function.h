@@ -66,8 +66,6 @@ class smith : public nonlinear_function//fresnel
 		//! Fresnel reflectance at theta = 0 ?
 		//! RP: I DOUBLT IT . Seems to be a brute copy and paste ???
 		//! RP: w^2 should be the mean-square surface slope
-		vec w;
-
-    smith() {};
+        vec w;
 } ;
 

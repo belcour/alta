@@ -19,15 +19,17 @@
 #include <cmath>
 
 #include <core/common.h>
+#include <core/params.h>
 
 using namespace alta;
 
-ALTA_DLL_EXPORT function* provide_function(const parameters& params)
+ALTA_DLL_EXPORT function* provide_function(const alta::parameters& params)
 {
     return new lafortune_function(params);
 }
 
-lafortune_function::lafortune_function(const parameters& params)
+lafortune_function::lafortune_function(const alta::parameters& params) :
+    nonlinear_function(params)
 {
     auto nY = params.dimY();
 
@@ -50,7 +52,8 @@ vec lafortune_function::operator()(const vec& x) const
 }
 vec lafortune_function::value(const vec& x) const 
 {
-	vec res(dimY());
+    const int nY = _parameters.dimY();
+    vec res(nY);
 
 #ifdef ADAPT_TO_PARAM
 	vec y(6);
@@ -69,7 +72,7 @@ vec lafortune_function::value(const vec& x) const
 #endif
 
 	// For each color channel
-	for(int i=0; i<dimY(); ++i)
+    for(int i=0; i<nY; ++i)
 	{
 		// Start with the diffuse term
 		res[i] = _kd[i];
@@ -97,7 +100,8 @@ vec lafortune_function::value(const vec& x, const vec& p)
 	assert(p.size() == nbParameters());
 	setParameters(p);
 
-	vec res(dimY());
+    const int nY = _parameters.dimY();
+    vec res(nY);
 
 #ifdef ADAPT_TO_PARAM
 	vec y(6);
@@ -116,7 +120,7 @@ vec lafortune_function::value(const vec& x, const vec& p)
 #endif
 
 	// For each lobe and for each color channel
-	for(int i=0; i<dimY(); ++i)
+    for(int i=0; i<nY; ++i)
 	{
 		// Start with the diffuse
 		res[i] = _kd[i];
@@ -140,6 +144,7 @@ vec lafortune_function::value(const vec& x, const vec& p)
 void lafortune_function::setNbLobes(int N)
 {
     _n = N;
+    const int _nY = _parameters.dimY();
 
     // Update the length of the vectors
 	 if(_isotropic)
@@ -152,47 +157,49 @@ void lafortune_function::setNbLobes(int N)
 //! Number of parameters to this non-linear function
 int lafortune_function::nbParameters() const 
 {
+    const int nY = _parameters.dimY();
 #ifdef FIT_DIFFUSE
 	if(_isotropic)
-		return (3*_n+1)*dimY();
+        return (3*_n+1)*nY;
 	else
-		return (4*_n+1)*dimY();
+        return (4*_n+1)*nY;
 #else
 	if(_isotropic)
-		return (3*_n)*dimY();
+        return (3*_n)*nY;
 	else
-		return (4*_n)*dimY();
+        return (4*_n)*nY;
 #endif
 }
 
 //! Get the vector of parameters for the function
 vec lafortune_function::parameters() const 
 {
+    const int nY = _parameters.dimY();
 	vec res(nbParameters());
 	for(int n=0; n<_n; ++n)
-		for(int i=0; i<dimY(); ++i)
+        for(int i=0; i<nY; ++i)
 		{
 			if(_isotropic)
 			{
-				res[(n*dimY() + i)*3 + 0] = _C[(n*dimY() + i)*2 + 0];
-				res[(n*dimY() + i)*3 + 1] = _C[(n*dimY() + i)*2 + 1];
-				res[(n*dimY() + i)*3 + 2] = _N[n*dimY()  + i];
+                res[(n*nY + i)*3 + 0] = _C[(n*nY + i)*2 + 0];
+                res[(n*nY + i)*3 + 1] = _C[(n*nY + i)*2 + 1];
+                res[(n*nY + i)*3 + 2] = _N[n*nY  + i];
 			}
 			else
 			{
-				res[(n*dimY() + i)*4 + 0] = _C[(n*dimY() + i)*3 + 0];
-				res[(n*dimY() + i)*4 + 1] = _C[(n*dimY() + i)*3 + 1];
-				res[(n*dimY() + i)*4 + 2] = _C[(n*dimY() + i)*3 + 2];
-				res[(n*dimY() + i)*4 + 3] = _N[n*dimY()  + i];
+                res[(n*nY + i)*4 + 0] = _C[(n*nY + i)*3 + 0];
+                res[(n*nY + i)*4 + 1] = _C[(n*nY + i)*3 + 1];
+                res[(n*nY + i)*4 + 2] = _C[(n*nY + i)*3 + 2];
+                res[(n*nY + i)*4 + 3] = _N[n*nY  + i];
 			}
 		}
 
 #ifdef FIT_DIFFUSE
-	 for(int i=0; i<dimY(); ++i)
+     for(int i=0; i<nY; ++i)
 	 {
 		 if(_isotropic)
 		 {
-			res[3*_n*dimY() + i] = _kd[i];
+            res[3*_n*nY + i] = _kd[i];
 		 }
 	 }
 #endif
@@ -202,21 +209,22 @@ vec lafortune_function::parameters() const
 //! Update the vector of parameters for the function
 void lafortune_function::setParameters(const vec& p) 
 {
+    const int nY = _parameters.dimY();
 	// Safety check the number of parameters
 	assert(p.size() == nbParameters());
 
 	for(int n=0; n<_n; ++n)
-		for(int i=0; i<dimY(); ++i)
+        for(int i=0; i<nY; ++i)
 		{
-			_C[(n*dimY() + i)*3 + 0] = p[(n*dimY() + i)*4 + 0];
-			_C[(n*dimY() + i)*3 + 1] = p[(n*dimY() + i)*4 + 1];
-			_C[(n*dimY() + i)*3 + 2] = p[(n*dimY() + i)*4 + 2];
-			_N[n*dimY()  + i]        = p[(n*dimY() + i)*4 + 3];
+            _C[(n*nY + i)*3 + 0] = p[(n*nY + i)*4 + 0];
+            _C[(n*nY + i)*3 + 1] = p[(n*nY + i)*4 + 1];
+            _C[(n*nY + i)*3 + 2] = p[(n*nY + i)*4 + 2];
+            _N[n*nY  + i]        = p[(n*nY + i)*4 + 3];
 		}
 #ifdef FIT_DIFFUSE
-	for(int i=0; i<dimY(); ++i)
+    for(int i=0; i<nY; ++i)
 	{
-		_kd[i] = p[4*_n*dimY() + i];
+        _kd[i] = p[4*_n*nY + i];
 	}
 #endif
 }
@@ -225,6 +233,7 @@ void lafortune_function::setParameters(const vec& p)
 //! parameters. 
 vec lafortune_function::parametersJacobian(const vec& x) const 
 {
+    const int nY = _parameters.dimY();
 
 #ifdef ADAPT_TO_PARAM
 	vec y(6);
@@ -242,14 +251,14 @@ vec lafortune_function::parametersJacobian(const vec& x) const
 	dz = x[2]*x[5];
 #endif
 
-    vec jac(dimY()*nbParameters());
-	 for(int i=0; i<dimY(); ++i)
+    vec jac(nY*nbParameters());
+     for(int i=0; i<nY; ++i)
 	 {
 		 for(int n=0; n<_n; ++n)
-			 for(int j=0; j<dimY(); ++j)
+             for(int j=0; j<nY; ++j)
 			 {
 				 // index of the current monochromatic lobe
-				 int index = i*nbParameters() + 4*(n*dimY() + j);
+                 int index = i*nbParameters() + 4*(n*nY + j);
 				 
 				 double Cx, Cy, Cz, N;
 				 getCurrentLobe(n, j, Cx, Cy, Cz, N);
@@ -283,10 +292,10 @@ vec lafortune_function::parametersJacobian(const vec& x) const
 			 }
 
 #ifdef FIT_DIFFUSE
-		 for(int j=0; j<dimY(); ++j)
+         for(int j=0; j<nY; ++j)
 		 {
 			 // index of the current monochromatic lobe
-			 int index = i*nbParameters() + 4*_n*dimY() + j;
+             int index = i*nbParameters() + 4*_n*nY + j;
 
 			 jac[index] = 1.0;
 		 }
@@ -298,31 +307,33 @@ vec lafortune_function::parametersJacobian(const vec& x) const
 		
 void lafortune_function::bootstrap(const ptr<data> d, const arguments& args)
 {
+    const int nY = _parameters.dimY();
+
     // Check the arguments for the number of lobes
     this->setNbLobes(args.get_int("lobes", 1));
 
     // Set the diffuse component
 	vec x0 = d->get(0);
-	for(int i=0; i<d->dimY(); ++i)
-		_kd[i] = x0[d->dimX() + i];
+    for(int i=0; i<d->parametrization().dimY(); ++i)
+        _kd[i] = x0[d->parametrization().dimX() + i];
 
 	for(int i=1; i<d->size(); ++i)
 	{
 		vec xi = d->get(i);
-		for(int j=0; j<d->dimY(); ++j)
-			_kd[j] = std::min(xi[d->dimX() + j], _kd[j]);
+        for(int j=0; j<d->parametrization().dimY(); ++j)
+            _kd[j] = std::min(xi[d->parametrization().dimX() + j], _kd[j]);
 	}
 
     // The remaining data will be equal to one
     for(int n=0; n<_n; ++n)
-        for(int i=0; i<dimY(); ++i)
+        for(int i=0; i<_parameters.dimY(); ++i)
         {
             double theta = 0.5 * M_PI * n / (double)_n;
 
-            _C[(n*dimY() + i)*3 + 0] = -sin(theta);
-            _C[(n*dimY() + i)*3 + 1] = -sin(theta);
-            _C[(n*dimY() + i)*3 + 2] = cos(theta);
-            _N[n*dimY()  + i]        = (double)_n;
+            _C[(n*nY + i)*3 + 0] = -sin(theta);
+            _C[(n*nY + i)*3 + 1] = -sin(theta);
+            _C[(n*nY + i)*3 + 2] = cos(theta);
+            _N[n*nY  + i]        = (double)_n;
         }
 }
 
@@ -396,6 +407,7 @@ bool lafortune_function::load(std::istream& in)
 	 setNbLobes(nb_lobes);
 
 	// Parse the lobe
+    const int _nY = _parameters.dimY();
 	for(int n=0; n<_n; ++n)
 	{
 		for(int i=0; i<_nY; ++i)
@@ -418,6 +430,7 @@ void lafortune_function::save_call(std::ostream& out, const arguments& args) con
 {
     bool is_alta   = !args.is_defined("export") || args["export"] == "alta";
 
+    const int _nY = _parameters.dimY();
     if(is_alta)
     {
         out << "#FUNC nonlinear_function_lafortune" << std::endl ;

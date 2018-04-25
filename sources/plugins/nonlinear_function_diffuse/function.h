@@ -19,6 +19,7 @@
 #include <core/data.h>
 #include <core/args.h>
 #include <core/common.h>
+#include <core/params.h>
 
 using namespace alta;
 

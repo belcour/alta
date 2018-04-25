@@ -22,18 +22,18 @@
 
 using namespace alta;
 
-ALTA_DLL_EXPORT function* provide_function(const parameters& params)
+ALTA_DLL_EXPORT function* provide_function(const alta::parameters& params)
 {
     return new spherical_gaussian_function(params);
 }
 
-spherical_gaussian_function::spherical_gaussian_function(const parameters& params)
+spherical_gaussian_function::spherical_gaussian_function(const alta::parameters& params)
     : nonlinear_function(params.set_input(6, params::CARTESIAN)),
-      _non_a(1), _type(Mirror)
+      _a(1.0), _type(Mirror)
 {
     // Update the length of the vectors
-    _n.resize(_nY) ;
-    _ks.resize(_nY) ;
+    _n.resize(_parameters.dimY()) ;
+    _ks.resize(_parameters.dimY()) ;
 }
 
 // Overload the function operator
@@ -43,10 +43,10 @@ vec spherical_gaussian_function::operator()(const vec& x) const
 }
 vec spherical_gaussian_function::value(const vec& x) const 
 {
-	vec res(dimY());
+    vec res(_parameters.dimY());
 	double dot = compute_dot(x);
 
-	for(int i=0; i<dimY(); ++i)
+    for(int i=0; i<_parameters.dimY(); ++i)
 	{
 		res[i] = _ks[i] * std::exp(_n[i] * (dot-1));
 	}
@@ -95,22 +95,23 @@ int spherical_gaussian_function::nbParameters() const
 {
 	if(_type == Moment)
 	{
-		return 2*dimY()+1;
+        return 2*_parameters.dimY()+1;
 	}
 	else
 	{
-		return 2*dimY();
+        return 2*_parameters.dimY();
 	}
 }
 
 //! Get the vector of parameters for the function
 vec spherical_gaussian_function::parameters() const 
 {
+    const int nY = _parameters.dimY();
 	if(_type == Moment)
 	{
-		vec res(2*dimY()+1);
-		res[2*dimY()] = _a;
-		for(int i=0; i<dimY(); ++i)
+        vec res(2*nY+1);
+        res[2*nY] = _a;
+        for(int i=0; i<nY; ++i)
 		{
 			res[i*2 + 0] = _ks[i];
 			res[i*2 + 1] = _n[i];
@@ -120,8 +121,8 @@ vec spherical_gaussian_function::parameters() const
 	}
 	else
 	{
-		vec res(2*dimY());
-		for(int i=0; i<dimY(); ++i)
+        vec res(2*nY);
+        for(int i=0; i<nY; ++i)
 		{
 			res[i*2 + 0] = _ks[i];
 			res[i*2 + 1] = _n[i];
@@ -133,11 +134,12 @@ vec spherical_gaussian_function::parameters() const
 //! \brief get the min values for the parameters
 vec spherical_gaussian_function::getParametersMin() const
 {
+    const int nY = _parameters.dimY();
 	if(_type == Moment)
 	{
-		vec res(2*dimY()+1);
-		res[2*dimY()] = 0.0;
-		for(int i=0; i<dimY(); ++i)
+        vec res(2*nY+1);
+        res[2*nY] = 0.0;
+        for(int i=0; i<nY; ++i)
 		{
 			res[i*2 + 0] = 0.0;
 			res[i*2 + 1] = 0.0;
@@ -147,8 +149,8 @@ vec spherical_gaussian_function::getParametersMin() const
 	}
 	else
 	{
-		vec res(2*dimY());
-		for(int i=0; i<dimY(); ++i)
+        vec res(2*nY);
+        for(int i=0; i<nY; ++i)
 		{
 			res[i*2 + 0] = 0.0;
 			res[i*2 + 1] = 0.0;
@@ -163,10 +165,10 @@ void spherical_gaussian_function::setParameters(const vec& p)
 {
 	if(_type == Moment)
 	{
-		_a = p[2*dimY()];
+        _a = p[2*_parameters.dimY()];
 	}
 
-	for(int i=0; i<dimY(); ++i)
+    for(int i=0; i<_parameters.dimY(); ++i)
 	{
 		_ks[i] = p[i*2 + 0];
 		_n[i]  = p[i*2 + 1];
@@ -179,10 +181,10 @@ vec spherical_gaussian_function::parametersJacobian(const vec& x) const
 {
 	double dot = compute_dot(x);
 
-    vec jac(dimY()*nbParameters());
-	 for(int i=0; i<dimY(); ++i)
+    vec jac(_parameters.dimY()*nbParameters());
+     for(int i=0; i<_parameters.dimY(); ++i)
 	 {
-		 for(int j=0; j<dimY(); ++j)
+         for(int j=0; j<_parameters.dimY(); ++j)
 		 {
 			 if(i == j)
 			 {
@@ -221,7 +223,7 @@ vec spherical_gaussian_function::parametersJacobian(const vec& x) const
 		
 void spherical_gaussian_function::bootstrap(const ptr<data> d, const arguments& args)
 {
-	for(int i=0; i<dimY(); ++i)
+    for(int i=0; i<_parameters.dimY(); ++i)
 	{
 		_ks[i] = 1.0;
 		_n[i]  = 1.0;
@@ -287,7 +289,7 @@ bool spherical_gaussian_function::load(std::istream& in)
 	}
 
 	// Parse the lobe
-	for(int i=0; i<_nY; ++i)
+    for(int i=0; i<_parameters.dimY(); ++i)
 	{
 
 		in >> token >> _ks[i];
@@ -309,11 +311,12 @@ void spherical_gaussian_function::save_call(std::ostream& out, const arguments& 
 {
     bool is_alta   = !args.is_defined("export") || args["export"] == "alta";
 
+    const int nY = _parameters.dimY();
     if(is_alta)
     {
 		out << "#FUNC nonlinear_function_spherical_gaussian" << std::endl ;
 
-		 for(int i=0; i<_nY; ++i)
+         for(int i=0; i<nY; ++i)
 		 {
 			 out << "Ks " << _ks[i] << std::endl;
 			 out << "N  " <<  _n[i] << std::endl;
@@ -329,17 +332,17 @@ void spherical_gaussian_function::save_call(std::ostream& out, const arguments& 
 	 else
 	 {
 		 out << "spherical_gaussian(L, V, N, X, Y, vec3(";
-		 for(int i=0; i<_nY; ++i)
+         for(int i=0; i<nY; ++i)
 		 {
 			 out << _ks[i];
-			 if(i < _nY-1) { out << ", "; }
+             if(i < nY-1) { out << ", "; }
 		 }
 
 		 out << "), vec3(";
-		 for(int i=0; i<_nY; ++i)
+         for(int i=0; i<nY; ++i)
 		 {
 			 out << _n[i];
-			 if(i < _nY-1) { out << ", "; }
+             if(i < nY-1) { out << ", "; }
 		 }
 
 		 out << "))";

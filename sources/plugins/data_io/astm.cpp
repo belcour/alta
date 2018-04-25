@@ -22,7 +22,7 @@
 #include <cmath>
 #include <utility>
 
-using namespace alta;
+namespace alta {
 
 /*! \ingroup datas
  *  \ingroup plugins
@@ -56,7 +56,7 @@ public: //methods
         : vertical_segment(params, size, input_data)
     { }
 
-    ASTM(const parameters& params, size_t size)
+    ASTM(const alta::parameters& params, size_t size)
         : vertical_segment(params, size)
     { }
 };
@@ -174,4 +174,6 @@ ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args)
     }
 
     return new ASTM(params, size, std::shared_ptr<double>(data));
+}
+
 }

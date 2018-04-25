@@ -21,6 +21,7 @@
 #include <core/fitter.h>
 #include <core/args.h>
 #include <core/common.h>
+#include <core/params.h>
 
 using namespace alta;
 
@@ -44,7 +45,7 @@ class lafortune_function : public nonlinear_function
 
 	public: // methods
 
-    lafortune_function(const parameters& params);
+        lafortune_function(const alta::parameters& params);
 
         // Overload the function operator
 		virtual vec operator()(const vec& x) const ;
@@ -103,6 +104,7 @@ class lafortune_function : public nonlinear_function
 		//! n for the color channel number c.
 		void getCurrentLobe(int n, int c, double& Cx, double& Cy, double& Cz, double& N) const 
 		{
+            const int _nY = _parameters.dimY();
 			if(_isotropic)
 			{
 				Cx = _C[(n*_nY + c)*2 + 0];
@@ -128,11 +130,5 @@ class lafortune_function : public nonlinear_function
 
 		//!\brief Flags to get an isotropic lobe
 		bool _isotropic;
-
-    lafortune_function()
-        : nonlinear_function(6, 0,
-                             params::CARTESIAN, params::UNKNOWN_OUTPUT)
-    {
-    };
 } ;
 
