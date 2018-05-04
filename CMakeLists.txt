@@ -81,6 +81,9 @@ function(alta_download_merl name)
              "${CMAKE_BINARY_DIR}/tests/${name}.binary" SHOW_PROGRESS)
          set(${name}_FOUND TRUE)
     endif()
+    if(NOT ${name}_FOUND)
+	    message("Error checking for ${name}.binary but not found")
+    endif()
 endfunction(alta_download_merl)
 
 
@@ -110,6 +113,11 @@ add_library(core STATIC
             sources/core/rational_function.cpp
             sources/core/plugins_manager.h
             sources/core/plugins_manager.cpp)
+
+
+add_library(quadprog STATIC
+            external/quadprog++/QuadProg++.hh
+            external/quadprog++/QuadProg++.cc)
 
 target_link_libraries(core ${CMAKE_DL_LIBS})
 
@@ -164,6 +172,8 @@ alta_add_plugin(rational_fitter_leastsquare		rational_fitter_leastsquare/rationa
 alta_add_plugin(rational_fitter_quadprog		rational_fitter_quadprog/rational_fitter.cpp)
 alta_add_plugin(rational_fitter_parallel		rational_fitter_parallel/rational_fitter.cpp)
 alta_add_plugin(nonlinear_fitter_eigen                  nonlinear_fitter_eigen/fitter.cpp)
+target_link_libraries(rational_fitter_quadprog quadprog)
+target_link_libraries(rational_fitter_parallel quadprog)
 
 # TODO: Add check before compiling CERES, NLOPT and IPOPT
 alta_add_plugin(nonlinear_fitter_ceres                  nonlinear_fitter_ceres/fitter.cpp)
@@ -229,6 +239,31 @@ if(CPPQUICKCHECK_FOUND)
     alta_test_unit(params-qc-1 core/params-qc-1.cpp)
 endif()
 
+# Integration test for rational function fitting
+foreach(fitter IN ITEMS eigen leastsquare quadprog parallel)
+    add_test(NAME "data2dbrdf_kirby_${fitter}"
+             COMMAND "data2brdf" "--input"   "${CMAKE_SOURCE_DIR}/sources/tests/Kirby2.dat"
+                                 "--output"  "Kirby2.func"
+                                 "--fitter"  "rational_fitter_${fitter}"
+             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+    set_tests_properties("data2dbrdf_kirby_${fitter}"
+                         PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
+endforeach()
+
+add_test(NAME "brdf2data_kirby"
+         COMMAND "brdf2data" "--input"     "Kirby2.func"
+                             "--output"    "Kirby2.dat"
+                             "--data-file" "${CMAKE_SOURCE_DIR}/sources/tests/Kirby2.dat"
+         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+add_test(NAME "data2stats_kirby"
+         COMMAND "data2stats" "--input"     "Kirby2.dat"
+                              "--ref"       "${CMAKE_SOURCE_DIR}/sources/tests/Kirby2.dat"
+         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+
+
 # Integration tests using MERL data
 alta_download_merl("gold-metallic-paint")
 if(gold-metallic-paint_FOUND)
@@ -252,5 +287,3 @@ endif()
 if(gold-metallic-paint_FOUND AND CATCH_FOUND)
     alta_test_unit(conversion-catch-1 core/conversion-catch-1.cpp )
 endif()
-
-
