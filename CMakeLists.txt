@@ -27,7 +27,7 @@ add_definitions(-DALTA_PLUGIN_DIRECTORY="/usr/lib/alta_plugins")
 
 # Add core and library include files
 include_directories("external/build" "sources" ${EIGEN3_INCLUDE_DIR})
-include_directories("external" "external/Catch/include")
+include_directories("external" "external/Catch/include" "external/quadprog++")
 
 # Look for header only dependencies
 find_file(EIGEN_FOUND "Eigen/Core"      HINTS ${EIGEN3_INCLUDE_DIR})
@@ -134,6 +134,9 @@ endif()
 #alta_add_plugin(data_matlab data_interpolants/matlab.cpp)
 
 # Functions
+alta_add_plugin(rational_function_legendre		rational_function_legendre/rational_function.cpp)
+alta_add_plugin(rational_function_chebychev		rational_function_chebychev/rational_function.cpp)
+alta_add_plugin(rational_function_cosine 		rational_function_cosine/rational_function.cpp)
 alta_add_plugin(nonlinear_function_abc                  nonlinear_function_abc/function.cpp)
 alta_add_plugin(nonlinear_function_beckmann             nonlinear_function_beckmann/function.cpp)
 alta_add_plugin(nonlinear_function_blinn                nonlinear_function_blinn/function.cpp)
@@ -143,16 +146,23 @@ alta_add_plugin(nonlinear_function_sgd                  nonlinear_function_sgd/f
 alta_add_plugin(nonlinear_function_spherical_gaussian   nonlinear_function_spherical_gaussian/function.cpp)
 alta_add_plugin(nonlinear_function_ward                 nonlinear_function_ward/function.cpp)
 
-# TODO Missing retro reflective functions
-# TODO Missing some Fresnels
+alta_add_plugin(nonlinear_function_retrobeckmann        nonlinear_function_retrobeckmann/function.cpp)
+alta_add_plugin(nonlinear_function_retroblinn		nonlinear_function_retroblinn/function.cpp)
+alta_add_plugin(nonlinear_function_retroyoo             nonlinear_function_retroyoo/function.cpp)
+alta_add_plugin(nonlinear_fresnel_retroschlick		nonlinear_fresnel_retroschlick/function.cpp)
 
 alta_add_plugin(nonlinear_fresnel_schlick               nonlinear_fresnel_schlick/function.cpp)
+alta_add_plugin(nonlinear_fresnel_normalized_schlick    nonlinear_fresnel_normalized_schlick/function.cpp)
 
 alta_add_plugin(nonlinear_shadowing_schlick             nonlinear_shadowing_schlick/function.cpp)
 alta_add_plugin(nonlinear_shadowing_smith               nonlinear_shadowing_smith/function.cpp)
 alta_add_plugin(nonlinear_shadowing_walter_smith        nonlinear_shadowing_walter_smith/function.cpp)
 
 # Fitters
+alta_add_plugin(rational_fitter_eigen 			rational_fitter_eigen/rational_fitter.cpp)
+alta_add_plugin(rational_fitter_leastsquare		rational_fitter_leastsquare/rational_fitter.cpp)
+alta_add_plugin(rational_fitter_quadprog		rational_fitter_quadprog/rational_fitter.cpp)
+alta_add_plugin(rational_fitter_parallel		rational_fitter_parallel/rational_fitter.cpp)
 alta_add_plugin(nonlinear_fitter_eigen                  nonlinear_fitter_eigen/fitter.cpp)
 
 # TODO: Add check before compiling CERES, NLOPT and IPOPT
@@ -179,10 +189,15 @@ endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/softs)
 
-alta_add_soft(brdf2data  brdf2data/main.cpp)
-alta_add_soft(data2data  data2data/main.cpp)
-alta_add_soft(data2brdf  data2brdf/main.cpp)
-alta_add_soft(data2stats data2stats/data2stats.cpp)
+alta_add_soft(brdf2brdf    brdf2brdf/main.cpp)
+alta_add_soft(brdf2data    brdf2data/main.cpp)
+alta_add_soft(brdf2gnuplot brdf2gnuplot/main.cpp)
+#alta_add_soft(brdf2moments brdf2moments/main.cpp)
+alta_add_soft(brdf2stats   fit2stat/fit2stat.cpp)
+alta_add_soft(data2data    data2data/main.cpp)
+alta_add_soft(data2brdf    data2brdf/main.cpp)
+alta_add_soft(data2stats   data2stats/data2stats.cpp)
+alta_add_soft(data2moments data2moments/main.cpp)
 
 
 #############################
