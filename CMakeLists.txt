@@ -177,7 +177,9 @@ target_link_libraries(rational_fitter_parallel quadprog)
 
 # TODO: Add check before compiling CERES, NLOPT and IPOPT
 alta_add_plugin(nonlinear_fitter_ceres                  nonlinear_fitter_ceres/fitter.cpp)
+target_link_libraries(nonlinear_fitter_ceres ceres)
 alta_add_plugin(nonlinear_fitter_nlopt                  nonlinear_fitter_nlopt/fitter.cpp)
+target_link_libraries(nonlinear_fitter_nlopt nlopt)
 #alta_add_plugin(nonlinear_fitter_ipopt                  nonlinear_fitter_ipopt/fitter.cpp)
 
 # Python bindings
@@ -279,7 +281,20 @@ if(gold-metallic-paint_FOUND)
                                   "--in-data"  "data_merl"
                                   "--out-data" "data_brdf_slice"
               WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+      
+      foreach(fitter IN ITEMS eigen ceres nlopt)
+	      add_test(NAME "data2dbrdf_gold_${fitter}"
+		      COMMAND "data2brdf" "--input"   "gold-metallic-paint.exr"
+			                  "--output"  "gold-metallic-paint-${fitter}.func"
+			                  "--data"    "data_brdf_slice"
+			                  "--fitter"  "nonlinear_fitter_${fitter}"
+			                  "--func"    "[nonlinear_function_diffuse, nonlinear_function_blinn]"
+		      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+	      set_tests_properties("data2dbrdf_gold_${fitter}"
+		      PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
+      endforeach()
+     
     set_tests_properties("data2data_gold" "data2data_gold_slice"
                          PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
 endif()
