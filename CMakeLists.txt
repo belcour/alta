@@ -76,13 +76,10 @@ function(alta_download_merl name)
     find_file(${name}_FOUND "${name}.binary" PATHS "${CMAKE_BINARY_DIR}/tests/")
     if(NOT ${name}_FOUND)
         message("Dowloading ${name} from MERL database:")
-        file(DOWNLOAD
-             "http://people.csail.mit.edu/wojciech/BRDFDatabase/brdfs/${name}.binary"
-             "${CMAKE_BINARY_DIR}/tests/${name}.binary" SHOW_PROGRESS)
-         set(${name}_FOUND TRUE)
-    endif()
-    if(NOT ${name}_FOUND)
-	    message("Error checking for ${name}.binary but not found")
+	file(DOWNLOAD
+	     "http://people.csail.mit.edu/wojciech/BRDFDatabase/brdfs/${name}.binary"
+	     "${CMAKE_BINARY_DIR}/tests/${name}.binary" SHOW_PROGRESS)
+	set(${name}_FOUND TRUE PARENT_SCOPE)
     endif()
 endfunction(alta_download_merl)
 
@@ -267,35 +264,107 @@ add_test(NAME "data2stats_kirby"
 
 
 # Integration tests using MERL data
+#
 alta_download_merl("gold-metallic-paint")
+if(NOT gold-metallic-paint_FOUND)
+	message("Error checking for gold-metallic-paint.binary but not found")
+endif()
 if(gold-metallic-paint_FOUND)
-    add_test(NAME "data2data_gold"
-             COMMAND "data2data" "--input"   "gold-metallic-paint.binary"
-                                 "--output"  "gold-metallic-paint.alta"
-                                 "--in-data" "data_merl"
-             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
-     add_test(NAME "data2data_gold_slice"
+     # Converting back an forth between MERL format and BRDF Slice format
+     # At the end of this batch, there should be multiple file of the same
+     # view of the gold metallic paint.
+     #
+     add_test(NAME "data2data_gold_slice_stark"
               COMMAND "data2data" "--input"    "gold-metallic-paint.binary"
-                                  "--output"   "gold-metallic-paint.exr"
+                                  "--output"   "gold-metallic-paint-stark.exr"
                                   "--in-data"  "data_merl"
                                   "--out-data" "data_brdf_slice"
               WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-      
-      foreach(fitter IN ITEMS eigen ceres nlopt)
-	      add_test(NAME "data2dbrdf_gold_${fitter}"
-		      COMMAND "data2brdf" "--input"   "gold-metallic-paint.exr"
-			                  "--output"  "gold-metallic-paint-${fitter}.func"
-			                  "--data"    "data_brdf_slice"
-			                  "--fitter"  "nonlinear_fitter_${fitter}"
-			                  "--func"    "[nonlinear_function_diffuse, nonlinear_function_blinn]"
-		      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
-	      set_tests_properties("data2dbrdf_gold_${fitter}"
-		      PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
-      endforeach()
-     
-    set_tests_properties("data2data_gold" "data2data_gold_slice"
+     add_test(NAME "data2data_gold_slice_merl"
+              COMMAND "data2data" "--input"    "gold-metallic-paint-stark.exr"
+                                  "--output"   "gold-metallic-paint-2.binary"
+                                  "--in-data"  "data_brdf_slice"
+                                  "--out-data" "data_merl"
+              WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+     add_test(NAME "data2data_gold_slice_rusin_1"
+              COMMAND "data2data" "--input"    "gold-metallic-paint.binary"
+                                  "--output"   "gold-metallic-paint-rusin-1.exr"
+                                  "--in-data"  "data_merl"
+                                  "--param"    "RUSIN_TH_TD"
+                                  "--out-data" "data_brdf_slice"
+              WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+    add_test(NAME "data2data_gold_alta_rusin_1"
+              COMMAND "data2data" "--input"    "gold-metallic-paint-rusin-1.exr"
+                                  "--output"   "gold-metallic-paint-rusin-1.alta"
+                                  "--in-data"  "data_brdf_slice"
+              WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+     add_test(NAME "data2data_gold_slice_rusin_2"
+              COMMAND "data2data" "--input"    "gold-metallic-paint.binary"
+                                  "--output"   "gold-metallic-paint-rusin-2.exr"
+                                  "--in-data"  "data_merl"
+                                  "--param"    "RUSIN_TH_TD_PD"
+                                  "--angle"    "90"
+                                  "--out-data" "data_brdf_slice"
+              WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+    # Remove zeros from the BRDF slice plugin
+    #
+    add_test(NAME "data2data_gold_remove_zeros"
+              COMMAND "data2data" "--input"    "gold-metallic-paint-stark.exr"
+                                  "--output"   "gold-metallic-paint-stark.alta"
+                                  "--in-data"  "data_brdf_slice"
+                                  "--ymin"     "[0.001, 0.001, 0.001]"
+              WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+
+    # Test all the rational fitters on the gold metallic data
+    # At the end of this pass, there should be one ALTA function file per fitter
+    #
+    foreach(fitter IN ITEMS eigen leastsquare quadprog parallel)
+        add_test(NAME "data2dbrdf_gold_rf_${fitter}"
+                COMMAND "data2brdf" "--output"   "gold-metallic-paint-rf-${fitter}.func"
+                                    "--input"    "gold-metallic-paint-rusin-1.alta"
+                                    "--fitter"  "rational_fitter_${fitter}"
+                                    "--min-np"  "100"
+                                    "--np"      "100"
+                                    "--nq"      "50"
+                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+        set_tests_properties("data2dbrdf_gold_rf_${fitter}"
+                            PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
+
+        add_test(NAME "brdf2data_gold_rf_${fitter}"
+                COMMAND "brdf2data" "--input"     "gold-metallic-paint-rf-${fitter}.func"
+                                    "--output"    "gold-metallic-paint-${fitter}.exr"
+                                    "--data"      "data_brdf_slice"
+                                    "--data-file" "gold-metallic-paint-rusin-1.exr"
+                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+    endforeach()
+
+
+
+    # Test all the nonlinear fitters on the gold metallic data
+    # At the end of this pass, there should be one ALTA function file per fitter
+    #
+    foreach(fitter IN ITEMS eigen ceres nlopt)
+        add_test(NAME "data2dbrdf_gold_${fitter}"
+            COMMAND "data2brdf" "--input"   "gold-metallic-paint-stark.alta"
+                            "--output"  "gold-metallic-paint-${fitter}.func"
+                            "--fitter"  "nonlinear_fitter_${fitter}"
+                            "--func"    "[nonlinear_function_diffuse, nonlinear_function_blinn]"
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+        set_tests_properties("data2dbrdf_gold_${fitter}"
+            PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
+    endforeach()
+
+    set_tests_properties("data2data_gold_slice_stark"  "data2data_gold_remove_zeros"
                          PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
 endif()
 
