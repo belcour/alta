@@ -322,6 +322,14 @@ if(gold-metallic-paint_FOUND)
               WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 
+    set_tests_properties("data2data_gold_slice_stark"
+                         "data2data_gold_remove_zeros"
+                         "data2data_gold_slice_merl"
+                         "data2data_gold_slice_rusin_1"
+                         "data2data_gold_alta_rusin_1"
+                         "data2data_gold_slice_rusin_2"
+                         PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
+
     # Test all the rational fitters on the gold metallic data
     # At the end of this pass, there should be one ALTA function file per fitter
     #
@@ -345,6 +353,9 @@ if(gold-metallic-paint_FOUND)
                                     "--data-file" "gold-metallic-paint-rusin-1.exr"
                 WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+        set_tests_properties("brdf2data_gold_rf_${fitter}"
+                            PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
+
     endforeach()
 
 
@@ -363,9 +374,6 @@ if(gold-metallic-paint_FOUND)
         set_tests_properties("data2dbrdf_gold_${fitter}"
             PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
     endforeach()
-
-    set_tests_properties("data2data_gold_slice_stark"  "data2data_gold_remove_zeros"
-                         PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
 endif()
 
 if(gold-metallic-paint_FOUND AND CATCH_FOUND)
