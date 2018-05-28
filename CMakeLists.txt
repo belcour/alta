@@ -22,6 +22,7 @@ find_package(Eigen3)
 find_package(OpenMP)
 find_package(PythonLibs)
 find_package(Boost COMPONENTS python)
+find_package(Doxygen)
 
 add_definitions(-DALTA_PLUGIN_DIRECTORY="/usr/lib/alta_plugins")
 
@@ -379,3 +380,12 @@ endif()
 if(gold-metallic-paint_FOUND AND CATCH_FOUND)
     alta_test_unit(conversion-catch-1 core/conversion-catch-1.cpp )
 endif()
+
+
+# add a target to generate API documentation with Doxygen
+if(DOXYGEN_FOUND)
+	add_custom_target(doc
+			  ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documents/doxygen.conf
+			  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/documents/
+			  COMMENT "Generating API documentation with Doxygen" VERBATIM)
+endif(DOXYGEN_FOUND)
