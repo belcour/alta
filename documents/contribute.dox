@@ -1,13 +1,58 @@
 /*!
-\page contribute Contribute
+\page contribute ALTA Developer Guide
 
-You can contribute and expand ALTA by providing new plugins. The three kind
-of plugins (\ref function, \ref data and \ref fitter) can be provided.
-Examples of such plugins can be found in the `$ALTA/sources/plugins`
-directory.
+You can contribute and expand ALTA by providing new plugins. The three kind of
+plugins (\ref functions "functions", \ref datas "datas" and \ref fitters
+"fitters") can be provided.  Examples of such plugins can be found in the
+`$ALTA/sources/plugins` directory. We advise to use source version control to
+communicate with the other developpers.
 
+ALTA has two repositories: one for active development (hosted on Inria’s
+gitlab) and another for continuous integration and pull-requests (hosted on
+github). We advise internal developpers to use the gitlab platform (for
+development branches) and external contributors to make forks using github.
 
-<center style="color:red">
-Work in progress
-</center>
+## Local Configuration
+To work easily with both remote repositories in your local repository, you need
+to setup them as different remotes. When doing your initial clone, we advise to
+set the name corresponding to the remote you are using. For example, to clone
+the gitlab instance, use the following command:
+
+    $ git clone -o gitlab https://gitlab.inria.fr/alta/alta.git
+
+To add the github remote (once you have a running local repository), you will
+need to do:
+
+    $ git remote add github https://github.com/belcour/alta.git
+
+Once both remotes are set, we advise the fetch all the tags and names to see
+the various developpement branches. However, you only need to access both
+master (gitlab and github) to work. If you are an external developper, forking
+the github repository is sufficient.
+
+## Create a New Branch (internal only)
+Development branches should be created on the gitlab remote if possible. We
+advise to sync with the master branch first
+
+    $ git checkout gitlab/master
+    $ git checkout -b my_branch --track gitlab/my_branch
+
+## Continuous Integration & Merge Request
+Push finished branches on the github remote for continuous integration or
+create a pull request there:
+
+    $ git push -f github my_branch
+
+Then, one of the internal developper will merge on the master and close the
+pull request.
+
+## Sync (internal only)
+Once your changes are merged into github’s master branch and all the continuous
+integration tests are green, you can sync the two remotes together by
+forwarding gitlab master on top of github master:
+
+    $ git checkout gitlab/master
+    $ git reset --hard github/master
+    $ git push -f gitlab master
+
 */
