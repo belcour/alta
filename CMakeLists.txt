@@ -23,6 +23,7 @@ find_package(OpenMP)
 find_package(PythonLibs)
 find_package(Boost COMPONENTS python)
 find_package(Doxygen)
+find_package(Ceres)
 
 add_definitions(-DALTA_PLUGIN_DIRECTORY="/usr/lib/alta_plugins")
 
@@ -173,9 +174,12 @@ alta_add_plugin(nonlinear_fitter_eigen                  nonlinear_fitter_eigen/f
 target_link_libraries(rational_fitter_quadprog quadprog)
 target_link_libraries(rational_fitter_parallel quadprog)
 
-# TODO: Add check before compiling CERES, NLOPT and IPOPT
-alta_add_plugin(nonlinear_fitter_ceres                  nonlinear_fitter_ceres/fitter.cpp)
-target_link_libraries(nonlinear_fitter_ceres ceres)
+# TODO: Add check before compiling NLOPT and IPOPT
+if (CERES_FOUND)
+    include_directories( ${CERES_INCLUDE_DIR} )
+    alta_add_plugin(nonlinear_fitter_ceres                  nonlinear_fitter_ceres/fitter.cpp)
+    target_link_libraries(nonlinear_fitter_ceres ceres)
+endif()
 alta_add_plugin(nonlinear_fitter_nlopt                  nonlinear_fitter_nlopt/fitter.cpp)
 target_link_libraries(nonlinear_fitter_nlopt nlopt)
 #alta_add_plugin(nonlinear_fitter_ipopt                  nonlinear_fitter_ipopt/fitter.cpp)
