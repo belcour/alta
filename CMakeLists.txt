@@ -16,6 +16,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #############################
 #        Dependencies       #
 #############################
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/configs/cmake/)
 
 # Find required packages
 find_package(Eigen3)
@@ -24,6 +25,7 @@ find_package(PythonLibs)
 find_package(Boost COMPONENTS python)
 find_package(Doxygen)
 find_package(Ceres)
+find_package(NLOPT)
 
 add_definitions(-DALTA_PLUGIN_DIRECTORY="/usr/lib/alta_plugins")
 
@@ -174,14 +176,17 @@ alta_add_plugin(nonlinear_fitter_eigen                  nonlinear_fitter_eigen/f
 target_link_libraries(rational_fitter_quadprog quadprog)
 target_link_libraries(rational_fitter_parallel quadprog)
 
-# TODO: Add check before compiling NLOPT and IPOPT
+# TODO: Add check before compiling  IPOPT
 if (CERES_FOUND)
     include_directories( ${CERES_INCLUDE_DIR} )
     alta_add_plugin(nonlinear_fitter_ceres                  nonlinear_fitter_ceres/fitter.cpp)
-    target_link_libraries(nonlinear_fitter_ceres ceres)
+    target_link_libraries(nonlinear_fitter_ceres ${CERES_LIBRARIES})
 endif()
-alta_add_plugin(nonlinear_fitter_nlopt                  nonlinear_fitter_nlopt/fitter.cpp)
-target_link_libraries(nonlinear_fitter_nlopt nlopt)
+if (NLOPT_FOUND)
+    include_directories( ${NLOPT_INCLUDE_DIRS} )
+    alta_add_plugin(nonlinear_fitter_nlopt                  nonlinear_fitter_nlopt/fitter.cpp)
+    target_link_libraries(nonlinear_fitter_nlopt ${NLOPT_LIBRARIES})
+endif()
 #alta_add_plugin(nonlinear_fitter_ipopt                  nonlinear_fitter_ipopt/fitter.cpp)
 
 # Python bindings
