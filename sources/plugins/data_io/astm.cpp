@@ -159,10 +159,9 @@ ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args)
     {
         assert(input.good());
 
-        std::getline(input, line);
-
-        if(line.size() == 0 || line.rfind(',') == std::string::npos)
-            continue;
+	do {
+	    std::getline(input, line);
+	} while(line.size() == 0 || line.rfind(',') == std::string::npos);
 
         std::replace(line.begin(), line.end(), ',', ' ');
 
@@ -172,7 +171,7 @@ ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args)
         for(int j = 0; j < n; ++j) {
             stream >> data[i + j];
         }
-		}
+    }
 
-    return new ASTM(params, n, std::shared_ptr<double>(data));
+    return new ASTM(params, size, std::shared_ptr<double>(data));
 }
