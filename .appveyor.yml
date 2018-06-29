@@ -8,7 +8,9 @@ install:
   - SET "PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - python --version
   - python -m ensurepip
-  - python -m pip install --egg scons==2.4.1
+  - pip install -U setuptools
+  - pip install -U wheel
+  - pip install scons==2.4.1
   - cinst nsis.portable
 
 before_build:
