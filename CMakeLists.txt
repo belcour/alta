@@ -6,7 +6,8 @@ project (alta CXX)
 #############################
 
 # Set Python version number
-set(Python_ADDITIONAL_VERSIONS 2.7)
+set(Python_Version "3" CACHE STRING "Python interface version (default Python 3)")
+set(Python_ADDITIONAL_VERSIONS $(Python_Version))
 
 # Require C++11 options
 set(CMAKE_CXX_STANDARD 11)
@@ -37,7 +38,7 @@ include_directories("external/pybind11/include")
 find_file(EIGEN_FOUND  "Eigen/Core"      HINTS ${EIGEN3_INCLUDE_DIR})
 find_file(CATCH_FOUND  "catch.hpp"       HINTS external/Catch/include)
 find_file(FLANN_FOUND  "flann/flann.hpp")
-find_file(PYBIND_FOUND "pybind11/pybind11.h")
+find_file(PYBIND_FOUND "pybind11/pybind11.h" HINTS "external/pybind11/include")
 
 # Check if Eigen is found
 if(NOT EIGEN_FOUND)
