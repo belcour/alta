@@ -1,8 +1,16 @@
 os:
-  - Visual Studio 2015
+  - Visual Studio 2017
 
 build:
   verbosity: detailed
+
+environment:
+  matrix:
+    - builder: cmake
+    - builder: scons
+
+init:
+  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 
 install:
   - SET "PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -12,10 +20,17 @@ install:
   - pip install -U wheel
   - pip install scons==2.4.1
   - cinst nsis.portable
+  - hg clone https://bitbucket.org/eigen/eigen external\eigen3
+  - cd external\eigen3
+  - mkdir build & cd build
+  - cmake .. -DCMAKE_INSTALL_PREFIX="..\..\build" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
+  - nmake install
+  - cd ..\..\..\
+  - dir
 
 before_build:
   # BOOST Python require x86 compilation
-  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+  #- call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
   #- call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 
 # Build script
@@ -30,23 +45,33 @@ build_script:
   #- dir C:\Python27\libs
   #- dir C:\Libraries\boost_1_63_0
   #- dir C:\Libraries\boost_1_63_0\lib64-msvc-14.0
-  - scons --cfg=./configs/scons/config-windows-appveyor.py
-  - appveyor PushArtifact config.log
+  - if "%builder%" == "scons" (
+       scons --cfg=./configs/scons/config-windows-appveyor.py &
+       appveyor PushArtifact config.log
+    )
 
   # Install CERES
-  - cd external
-  - git clone https://ceres-solver.googlesource.com/ceres-solver
-  - cd ceres-solver
-  - mkdir build-ceres
-  - cd build-ceres
-  - cmake .. -DBUILD_SHARED_LIBS=ON -DMINIGLOG=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="..\..\build" -DEIGEN_INCLUDE_DIR="..\..\build\include" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
-  - nmake install
-  - cd ..\..\..
+  # - cd external
+  # - git clone https://ceres-solver.googlesource.com/ceres-solver
+  # - cd ceres-solver
+  # - mkdir build-ceres
+  # - cd build-ceres
+  # - cmake .. -DBUILD_SHARED_LIBS=ON -DMINIGLOG=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="..\..\build" -DEIGEN_INCLUDE_DIR="..\..\build\include" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
+  # - nmake install
+  # - cd ..\..\..
+  # - dir
 
   # Rebuild with CERES and Python
-  - scons --cfg=./configs/scons/config-windows-appveyor.py
-  #- scons --cfg=./configs/scons/config-windows-appveyor.py python
-  - appveyor PushArtifact config.log
+  - if "%builder%" == "scons" (
+      scons --cfg=./configs/scons/config-windows-appveyor.py &
+      appveyor PushArtifact config.log
+    ) else (
+      mkdir build &
+      cd build &
+      cmake .. -DEIGEN3_INCLUDE_DIR="external/build/include/eigen3" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles" &
+      nmake &
+      cd ..
+    )
 
   # Generate product
   - makensis sources\scripts\installer.nsi
@@ -57,11 +82,22 @@ build_script:
 #
 test_script:
   - ./setpath.bat
-  - scons --cfg=./configs/scons/config-windows-appveyor.py tests
-  #- scons --cfg=./configs/scons/config-windows-appveyor.py python tests
+  - if "%builder%" == "scons" (
+      scons --cfg=./configs/scons/config-windows-appveyor.py tests
+    ) else
+      cd build &
+      nmake test &
+      cd ..
+    )
 
 artifacts:
    - path: sources\scripts\ALTA.exe
      name: ALTA
    - path: config.log
      name: Log
+
+on_failure:
+    - ls
+    - if "%builder%" == "cmake" (
+        more Testing\Temporary\LastText.log
+      )

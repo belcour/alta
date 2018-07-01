@@ -63,7 +63,7 @@ inline void register_vec(py::module& m) {
         }))
 		.def("__add__", &vec_add)
 		.def("__sub__", &vec_sub)
-		.def("__len__", &vec::size)
+		// .def("__len__", &vec::size)
         .def("__getitem__", [](const vec &s, unsigned int i) {
             if (i >= s.size()) throw py::index_error();
             return s[i];
