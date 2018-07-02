@@ -26,7 +26,6 @@ install:
   - cmake .. -DCMAKE_INSTALL_PREFIX="..\..\build" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
   - nmake install
   - cd ..\..\..\
-  - dir
 
 before_build:
   # BOOST Python require x86 compilation
@@ -51,15 +50,14 @@ build_script:
     )
 
   # Install CERES
-  # - cd external
-  # - git clone https://ceres-solver.googlesource.com/ceres-solver
-  # - cd ceres-solver
-  # - mkdir build-ceres
-  # - cd build-ceres
-  # - cmake .. -DBUILD_SHARED_LIBS=ON -DMINIGLOG=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="..\..\build" -DEIGEN_INCLUDE_DIR="..\..\build\include" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
-  # - nmake install
-  # - cd ..\..\..
-  # - dir
+  - cd external
+  - git clone https://ceres-solver.googlesource.com/ceres-solver
+  - cd ceres-solver
+  - mkdir build-ceres
+  - cd build-ceres
+  - cmake .. -DBUILD_SHARED_LIBS=ON -DMINIGLOG=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="..\..\build" -DEIGEN_INCLUDE_DIR="..\..\build\include" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
+  - nmake install
+  - cd ..\..\..
 
   # Rebuild with CERES and Python
   - if "%builder%" == "scons" (
@@ -84,20 +82,24 @@ test_script:
   - ./setpath.bat
   - if "%builder%" == "scons" (
       scons --cfg=./configs/scons/config-windows-appveyor.py tests
+      appveoyr PushArtifact build\sources\tests\*.log
     ) else
       cd build &
       nmake test &
+      appveyor PushArtifact Testing\Temporary\LastTest.log &
       cd ..
     )
 
+
+# Outputed files
+#
 artifacts:
    - path: sources\scripts\ALTA.exe
      name: ALTA
    - path: config.log
-     name: Log
-
-on_failure:
-    - ls
-    - if "%builder%" == "cmake" (
-        more Testing\Temporary\LastText.log
-      )
+     name: SconsLog
+   - path: 'build\sources\tests\*.log'
+     name: SConsTestsLog
+     type: zip
+   - path: build\Testing\Temporary\LastTest.log
+     name: CMakeTestsLog
