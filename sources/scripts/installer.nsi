@@ -51,20 +51,20 @@ RequestExecutionLevel user
 Section "ALTA" SecMain
 
   SetOutPath $INSTDIR\bin
-  File /nonfatal "${ALTADIR}\build\softs\*.exe"
-  File /nonfatal "${ALTADIR}\external\build\bin\*.dll"
+  File /nonfatal /r "${ALTADIR}\build\softs\*.exe"
+  File /nonfatal /r "${ALTADIR}\external\build\bin\*.dll"
 
   SetOutPath $INSTDIR\lib
-  File /nonfatal "${ALTADIR}\build\core\core.lib"
+  File /nonfatal /r "${ALTADIR}\build\core\core.lib"
 
   SetOutPath $INSTDIR\plugins
-  File /nonfatal "${ALTADIR}\build\plugins\nonlinear*.dll"
-  File /nonfatal "${ALTADIR}\build\plugins\rational*.dll"
-  File /nonfatal "${ALTADIR}\build\plugins\data*.dll"
+  File /nonfatal /r "${ALTADIR}\build\plugins\nonlinear*.dll"
+  File /nonfatal /r "${ALTADIR}\build\plugins\rational*.dll"
+  File /nonfatal /r "${ALTADIR}\build\plugins\data*.dll"
 
   ; Python package
   SetOutPath $INSTDIR\python
-  File /nonfatal "${ALTADIR}\build\python\alta.dll"
+  File /nonfatal /r "${ALTADIR}\build\python\alta.dll"
 
   # Update the ENVIROMNENT
   WriteRegStr HKCU "Environment" "ALTA_DIR"   '$INSTDIR'
