@@ -57,7 +57,7 @@ build_script:
   - nmake /NOLOGO install
   - cd ..\..\..
 
-  # (re)-Build with CERES and Python
+  # Rebuild with CERES and Python
   - if "%builder%" == "scons" (
       scons --cfg=./configs/scons/config-windows-appveyor.py &
       appveyor PushArtifact config.log
