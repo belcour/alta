@@ -52,7 +52,7 @@ class t_EXR_IO
 
 			/* Load the EXR version using TinyEXR */
 			EXRVersion _version;
-			_r = ParseEXRVersionFromMemory(&_version, &_memory[0]);
+			_r = ParseEXRVersionFromMemory(&_version, &_memory[0], _memory.size());
 			if(_r != TINYEXR_SUCCESS) {
 				std::cerr << "<<ERROR>> Could not load EXR version from stream" << std::endl;
 				return false;
@@ -63,7 +63,7 @@ class t_EXR_IO
 			/* Load the EXR header */
 			EXRHeader _header;
   			InitEXRHeader(&_header);
-			_r = ParseEXRHeaderFromMemory(&_header, &_version, &_memory[0], &_err);
+			_r = ParseEXRHeaderFromMemory(&_header, &_version, &_memory[0], _memory.size(), &_err);
 			if(_r != TINYEXR_SUCCESS) {
 				std::cerr << "<<ERROR>> Could not load EXR header from stream" << std::endl;
 				std::cerr << "<<ERROR>> " << _err << std::endl;
@@ -81,7 +81,7 @@ class t_EXR_IO
 			EXRImage _image;
   			InitEXRImage(&_image);
 
-			_r = LoadEXRImageFromMemory(&_image, &_header, &_memory[0], &_err);
+			_r = LoadEXRImageFromMemory(&_image, &_header, &_memory[0], _memory.size(), &_err);
 			if (_r != TINYEXR_SUCCESS) {
 				std::cerr << "<<ERROR>> Could not load EXR image from stream" << std::endl;
 				std::cerr << "<<ERROR>> " << _err << std::endl;
@@ -144,9 +144,9 @@ class t_EXR_IO
 
 			// Split RGBRGBRGB... into R, G and B layer
 			for (int i = 0; i < W*H; i++) {
-				images[0][i] = pix[3*i+0];
-				images[1][i] = pix[3*i+1];
-				images[2][i] = pix[3*i+2];
+				images[0][i] = (float)pix[3*i+0];
+				images[1][i] = (float)pix[3*i+1];
+				images[2][i] = (float)pix[3*i+2];
 			}
 
 			float* image_ptr[3];
