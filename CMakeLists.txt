@@ -197,12 +197,19 @@ endif()
 # Python bindings
 if(PYTHONLIBS_FOUND AND PYBIND_FOUND)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/python)
+    # Note: Required on windows to build the python dll in the 'python'
+    # directory. [Laurent] I have no idea why this is needed.
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/python)
+
     include_directories(${PYTHON_INCLUDE_DIRS})
     add_library(alta SHARED sources/python/alta.cpp)
     target_link_libraries(alta core ${PYTHON_LIBRARIES})
     set_target_properties(alta PROPERTIES PREFIX "")
     if(APPLE)
         set_target_properties(alta PROPERTIES SUFFIX ".so")
+    endif()
+    if(WIN32)
+        set_target_properties(alta PROPERTIES SUFFIX ".pyd")
     endif()
 endif()
 
