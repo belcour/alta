@@ -131,6 +131,9 @@ target_link_libraries(core ${CMAKE_DL_LIBS})
 
 #    set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
+# Note: Required on windows to build the plugins in the 'plugins'
+# directory. [Laurent] I have no idea why this is needed.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
 
 # Data
 alta_add_plugin(data_astm       data_io/astm.cpp)
