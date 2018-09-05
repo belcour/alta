@@ -35,3 +35,5 @@ external/nlopt-*
 /sources/build/data2brdf
 /sources/build/data2data
 /tests/*.log
+
+\.vscode/settings\.json
