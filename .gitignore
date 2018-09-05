@@ -37,3 +37,9 @@ external/nlopt-*
 /tests/*.log
 
 \.vscode/settings\.json
+
+build/release/
+
+vc140\.pdb
+
+*.exe
