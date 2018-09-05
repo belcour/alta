@@ -71,7 +71,7 @@ using namespace alta;
  *   [ngan]: http://people.csail.mit.edu/addy/research/brdf/
  */
 
-ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args);
+ALTA_DLL_EXPORT data* load_data(std::istream& input, const arguments& args) noexcept(false);
 
 #define MERL_SIZE                                           \
     (BRDF_SAMPLING_RES_THETA_H * BRDF_SAMPLING_RES_THETA_D  \
