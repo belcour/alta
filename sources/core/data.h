@@ -45,15 +45,18 @@ class data
     }
 
     /* TODO: Eventually mark the following constructors as deprecated.  */
+#ifdef __GNUG__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
     data() {}
 
     data(unsigned int dim_X, unsigned int dim_Y)
       : _parameters(dim_X, dim_Y)
     {}
+#ifdef __GNUG__
 #pragma GCC diagnostic pop
-
+#endif
     // Virtual destructor
     virtual ~data() {}
 

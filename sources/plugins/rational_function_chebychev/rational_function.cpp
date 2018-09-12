@@ -33,8 +33,10 @@ rational_function_chebychev::rational_function_chebychev(const alta::parameters&
 {
 }
 
+#ifdef __GNUG__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 rational_function_chebychev::rational_function_chebychev() : rational_function() 
 {
@@ -54,7 +56,9 @@ rational_function_chebychev_1d::rational_function_chebychev_1d(int nX, int np, i
 {
 }
 
+#ifdef __GNUG__
 #pragma GCC diagnostic pop
+#endif
 
 rational_function_chebychev_1d::rational_function_chebychev_1d(const parameters& params,
                                                                int np, int nq)

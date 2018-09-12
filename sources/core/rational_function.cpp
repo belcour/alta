@@ -484,10 +484,10 @@ std::ostream& operator<< (std::ostream& out, const rational_function_1d& r)
 }
 
 #ifndef TODO
-
+#ifdef __GNUG__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
+#endif
 rational_function::rational_function() : np(0), nq(0)
 {
 }
@@ -500,9 +500,9 @@ rational_function::rational_function(int np, int nq) : np(np), nq(nq)
 rational_function_1d::rational_function_1d()
 {
 }
-
+#ifdef __GNUG__
 #pragma GCC diagnostic pop
-
+#endif
 rational_function::rational_function(const parameters& params,
                                      int np, int nq):
     function(params), np(np), nq(nq)

@@ -132,9 +132,10 @@ protected:
 };
 
 // Suppress warnings about the synthesized zero-argument constructors.
+#ifdef __GNUG__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
+#endif
 
 /*! \brief Non-linear function interface
  *  \ingroup core
@@ -445,5 +446,6 @@ class cosine_function : public nonlinear_function
 		}
 };
 }
-
+#ifdef __GNUG__
 #pragma GCC diagnostic pop
+#endif

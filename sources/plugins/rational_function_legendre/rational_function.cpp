@@ -68,15 +68,17 @@ rational_function_legendre::rational_function_legendre(const parameters& params)
 {
 }
 
+#ifdef __GNUG__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 rational_function_legendre::rational_function_legendre()
 {
 }
-
+#ifdef __GNUG__
 #pragma GCC diagnostic pop
-
+#endif
 rational_function_legendre::~rational_function_legendre()
 {
 }
