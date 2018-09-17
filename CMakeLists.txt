@@ -67,6 +67,18 @@ function(alta_add_soft name sources)
         target_link_libraries(${name} core)
 endfunction(alta_add_soft)
 
+function(alta_test)
+    set(options OPTIONAL)
+    set(oneValueArgs NAME)
+    set(multiValueArgs COMMAND)
+    cmake_parse_arguments(TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND}
+             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    set_tests_properties("${TEST_NAME}"
+                         PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")  
+endfunction(alta_test)
+
 function(alta_test_unit name sources)
         add_executable(${name} sources/tests/${sources})
         target_link_libraries(${name} core)
@@ -276,14 +288,20 @@ add_test(NAME "data2stats_kirby"
                               "--ref"       "${CMAKE_SOURCE_DIR}/sources/tests/Kirby2.dat"
          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
- foreach(fitter IN ITEMS ${nonlinear_fitters})
-	add_test(NAME "data2brdf_pinkfelt_${fitter}_blinn"
-		 COMMAND "data2brdf"
-			 "--input"  "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
-                         "--output" "pink-felt-1d-ceres-blinn.func"
-			 "--fitter" "nonlinear_fitter_${fitter}"
-			 "--func"   "[nonlinear_function_diffuse, nonlinear_function_blinn]"
-         	 WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+foreach(fitter IN ITEMS ${nonlinear_fitters})
+	# add_test(NAME "data2brdf_pinkfelt_${fitter}"
+    #          COMMAND "data2brdf"
+    #                  "--input"  "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
+    #                  "--output" "pink-felt-1d-${fitter}-blinn.func"
+    #                  "--fitter" "nonlinear_fitter_${fitter}"
+    #                  "--func"   "[nonlinear_function_diffuse, nonlinear_function_blinn]"
+    #          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    alta_test(NAME "data2brdf_pinkfelt_${fitter}"
+              COMMAND "data2brdf"
+                      "--input"  "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
+                      "--output" "pink-felt-1d-${fitter}-blinn.func"
+                      "--fitter" "nonlinear_fitter_${fitter}"
+                      "--func"   "[nonlinear_function_diffuse, nonlinear_function_blinn]") 
 endforeach()
 
 # add a target to generate API documentation with Doxygen
