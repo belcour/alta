@@ -178,16 +178,19 @@ alta_add_plugin(nonlinear_fitter_eigen                  nonlinear_fitter_eigen/f
 target_link_libraries(rational_fitter_quadprog quadprog)
 target_link_libraries(rational_fitter_parallel quadprog)
 
+
 # TODO: Add check before compiling  IPOPT
 if (CERES_FOUND)
     include_directories( ${CERES_INCLUDE_DIR} )
     alta_add_plugin(nonlinear_fitter_ceres                  nonlinear_fitter_ceres/fitter.cpp)
     target_link_libraries(nonlinear_fitter_ceres ${CERES_LIBRARIES})
+    list(APPEND nonlinear_fitters ceres)
 endif()
 if (NLOPT_FOUND)
     include_directories( ${NLOPT_INCLUDE_DIRS} )
     alta_add_plugin(nonlinear_fitter_nlopt                  nonlinear_fitter_nlopt/fitter.cpp)
     target_link_libraries(nonlinear_fitter_nlopt ${NLOPT_LIBRARIES})
+    list(APPEND nonlinear_fitters nlopt)
 endif()
 #alta_add_plugin(nonlinear_fitter_ipopt                  nonlinear_fitter_ipopt/fitter.cpp)
 
@@ -273,6 +276,15 @@ add_test(NAME "data2stats_kirby"
                               "--ref"       "${CMAKE_SOURCE_DIR}/sources/tests/Kirby2.dat"
          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+ foreach(fitter IN ITEMS ${nonlinear_fitters})
+	add_test(NAME "data2brdf_pinkfelt_${fitter}_blinn"
+		 COMMAND "data2brdf"
+			 "--input"  "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
+                         "--output" "pink-felt-1d-ceres-blinn.func"
+			 "--fitter" "nonlinear_fitter_${fitter}"
+			 "--func"   "[nonlinear_function_diffuse, nonlinear_function_blinn]"
+         	 WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+endforeach()
 
 # add a target to generate API documentation with Doxygen
 if(DOXYGEN_FOUND)
