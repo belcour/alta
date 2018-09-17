@@ -289,13 +289,6 @@ add_test(NAME "data2stats_kirby"
          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 foreach(fitter IN ITEMS ${nonlinear_fitters})
-	# add_test(NAME "data2brdf_pinkfelt_${fitter}"
-    #          COMMAND "data2brdf"
-    #                  "--input"  "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
-    #                  "--output" "pink-felt-1d-${fitter}-blinn.func"
-    #                  "--fitter" "nonlinear_fitter_${fitter}"
-    #                  "--func"   "[nonlinear_function_diffuse, nonlinear_function_blinn]"
-    #          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     alta_test(NAME "data2brdf_pinkfelt_${fitter}"
               COMMAND "data2brdf"
                       "--input"  "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
