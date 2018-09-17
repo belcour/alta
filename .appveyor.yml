@@ -64,7 +64,7 @@ build_script:
     ) else (
       mkdir build &
       cd build &
-      cmake .. -DEIGEN3_INCLUDE_DIR="external/build/include/eigen3" -Wdev -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON  -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles" &
+      cmake .. -DEIGEN3_INCLUDE_DIR="external/build/include/eigen3" -DCeres_DIR="..\external\build\CMake" -Wdev -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON  -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles" &
       nmake /NOLOGO &
       cd ..
     )
