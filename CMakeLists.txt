@@ -79,6 +79,18 @@ function(alta_test)
                          PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")  
 endfunction(alta_test)
 
+function(alta_test_python)
+    set(options OPTIONAL)
+    set(oneValueArgs NAME)
+    set(multiValueArgs COMMAND)
+    cmake_parse_arguments(TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND}
+             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    set_tests_properties("${TEST_NAME}"
+        PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins;PYTHONPATH=${CMAKE_BINARY_DIR}/python")  
+endfunction(alta_test_function)
+
 function(alta_test_unit name sources)
         add_executable(${name} sources/tests/${sources})
         target_link_libraries(${name} core)
@@ -296,6 +308,17 @@ foreach(fitter IN ITEMS ${nonlinear_fitters})
                       "--fitter" "nonlinear_fitter_${fitter}"
                       "--func"   "[nonlinear_function_diffuse, nonlinear_function_blinn]") 
 endforeach()
+
+if(PYTHONLIBS_FOUND AND PYBIND_FOUND)
+    alta_test_python(NAME "python_test_arguments"
+                     COMMAND "python3" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-arguments.py")
+
+    alta_test_python(NAME "python_test_vec"
+                     COMMAND "python3" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-vec.py")
+
+    alta_test_python(NAME "python_test_function"
+                     COMMAND "python3" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-python-function.py")
+endif()
 
 # add a target to generate API documentation with Doxygen
 if(DOXYGEN_FOUND)

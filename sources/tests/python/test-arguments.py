@@ -13,8 +13,8 @@ if args['param'] != 'STARK_2D':
     fail = True
 
 if fail:
-    print "Testing python 'arguments' interface failed!"
+    print("Testing python 'arguments' interface failed!")
     exit(1)
 else:
-    print "Testing python 'arguments' interface passed!"
+    print("Testing python 'arguments' interface passed!")
     exit(0)
