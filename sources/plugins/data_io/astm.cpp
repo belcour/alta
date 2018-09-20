@@ -53,7 +53,7 @@ class ASTM : public vertical_segment
 public: //methods
     ASTM(const parameters& params, size_t size,
          std::shared_ptr<double> input_data)
-        : vertical_segment(params, size, input_data)
+        : vertical_segment(params, size, input_data, vertical_segment::NO_CONFIDENCE_INTERVAL)
     { }
 
     ASTM(const alta::parameters& params, size_t size)
