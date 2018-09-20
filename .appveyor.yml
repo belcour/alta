@@ -53,7 +53,7 @@ build_script:
   - cd ceres-solver
   - mkdir build-ceres
   - cd build-ceres
-  - cmake .. -DBUILD_SHARED_LIBS=ON -DMINIGLOG=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="..\..\build" -DEIGEN_INCLUDE_DIR="..\..\build\include" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
+  - cmake .. -DBUILD_SHARED_LIBS=OFF -DMINIGLOG=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX="..\..\build" -DEIGEN_INCLUDE_DIR="..\..\build\include" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
   - nmake /NOLOGO install
   - cd ..\..\..
 
@@ -64,7 +64,7 @@ build_script:
     ) else (
       mkdir build &
       cd build &
-      cmake .. -DEIGEN3_INCLUDE_DIR="external/build/include/eigen3" -DCeres_DIR="..\external\build\CMake" -Wdev -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON  -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles" &
+      cmake .. -DEIGEN3_INCLUDE_DIR="external/build/include/eigen3" -DCeres_DIR="external/build/CMake" -Wdev -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON  -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles" &
       nmake /NOLOGO &
       cd ..
     )

@@ -15,8 +15,9 @@ addons:
         packages:
             - g++-6
             - cmake
-            - libboost-python-dev
             - libeigen3-dev
+            - libceres-dev
+            - libpython3-dev
 
 before_install:
    - OMP_NUM_THREADS=2

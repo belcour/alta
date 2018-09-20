@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     arguments args(argc, argv) ;
 
 #ifdef __GLIBC__
-	feenableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
+	// feenableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
 #endif
 
 	 if(args.is_defined("help")) {

@@ -287,6 +287,7 @@ bool nonlinear_fitter_nlopt::fit_data(const ptr<data>& d, ptr<function>& fit, co
 	
 	// Launch minimization
 	double f_end;
+	std::cout << p << std::endl;
 	res = nlopt_optimize(opt, &p[0], &f_end);
 
 	if(res > 0)
