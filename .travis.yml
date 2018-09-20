@@ -45,5 +45,5 @@ after_failure:
    - if [ ${builder} = 'scons' ]; then
         cat config.log;
      else
-        cat Testing/Temporary/LastTest.log
+        cat Testing/Temporary/LastTest.log;
      fi

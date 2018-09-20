@@ -89,7 +89,7 @@ function(alta_test_python)
              WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     set_tests_properties("${TEST_NAME}"
         PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins;PYTHONPATH=${CMAKE_BINARY_DIR}/python")  
-endfunction(alta_test_function)
+endfunction(alta_test_python)
 
 function(alta_test_unit name sources)
         add_executable(${name} sources/tests/${sources})
