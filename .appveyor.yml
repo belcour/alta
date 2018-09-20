@@ -57,6 +57,16 @@ build_script:
   - nmake /NOLOGO install
   - cd ..\..\..
 
+  # Install NLOPT
+  - cd external
+  - git clone git://github.com/stevengj/nlopt
+  - cd nlopt
+  - mkdir build
+  - cd build
+  - cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="..\..\build" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"
+  - nmake /NOLOGO install
+  - cd ..\..\..
+
   # Rebuild with CERES and Python
   - if "%builder%" == "scons" (
       scons --cfg=./configs/scons/config-windows-appveyor.py &
