@@ -16,7 +16,6 @@ addons:
             - g++-6
             - cmake
             - libeigen3-dev
-            - libceres-dev
             - libpython3-dev
 
 before_install:
@@ -25,7 +24,7 @@ before_install:
    - echo "${builder}"
    - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then
         brew update;
-        brew install scons eigen;
+        brew install scons eigen ceres-solver;
      fi
 
 script:
