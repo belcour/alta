@@ -1,5 +1,4 @@
 import alta
-import numpy
 
 fail = 0
 
@@ -35,12 +34,6 @@ for i in range(0,len(y)):
     if l[i] != y[i]:
         fail += 1
 
-# Conversion to a numpy array
-na = numpy.array(y)
-for i in range(0,len(y)):
-    if na[i] != y[i]:
-        fail += 1
-
 
 # Print the test result
 if fail > 0:
@@ -48,4 +41,29 @@ if fail > 0:
     exit(1)
 else:
     print("Testing python 'vec' interface passed!")
+    exit(0)
+
+
+###########################################################
+##                                                       ##
+## SPECIAL TEST: Interoperability with the numpy library ##
+##                                                       ##
+###########################################################
+
+fail = 0
+
+import numpy
+
+# Conversion to a numpy array
+na = numpy.array(y)
+for i in range(0,len(y)):
+    if na[i] != y[i]:
+        fail += 1
+
+# Print the test result
+if fail > 0:
+    print("Testing python 'vec' interface with 'numpy' failed!")
+    exit(1)
+else:
+    print("Testing python 'vec' interface with 'numpy' passed!")
     exit(0)

@@ -7,6 +7,11 @@ build:
 environment:
   matrix:
     - builder: cmake
+      PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.3"
+      PYTHON_ARCH: "64"
+      PIP: "C:\\Python36-x64\\Scripts\\pip"
+
     - builder: scons
 
 init:
@@ -14,11 +19,13 @@ init:
 
 install:
   - SET "PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - python --version
-  - python -m ensurepip
-  - pip install -U setuptools
-  - pip install -U wheel
-  - pip install scons==2.4.1
+  - if "%builder%" == "scons" (
+       python --version &
+       python -m ensurepip &
+       pip install -U setuptools &
+       pip install -U wheel &
+       pip install scons==2.4.1
+    )
   - cinst nsis.portable
   - hg clone https://bitbucket.org/eigen/eigen external\eigen3
   - cd external\eigen3
@@ -95,7 +102,7 @@ test_script:
   - if "%builder%" == "scons" (
       scons --cfg=./configs/scons/config-windows-appveyor.py tests
       appveoyr PushArtifact build\sources\tests\*.log
-    ) else
+    ) else (
       cd build &
       nmake test &
       appveyor PushArtifact Testing\Temporary\LastTest.log &
