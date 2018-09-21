@@ -22,6 +22,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/configs/cmake/)
 # Find required packages
 find_package(Eigen3)
 find_package(OpenMP)
+find_package(PythonInterp)
 find_package(PythonLibs)
 find_package(Doxygen)
 find_package(Ceres)
@@ -319,15 +320,15 @@ foreach(fitter IN ITEMS ${nonlinear_fitters})
                       "--func"   "[nonlinear_function_diffuse, nonlinear_function_blinn]") 
 endforeach()
 
-if(PYTHONLIBS_FOUND AND PYBIND_FOUND)
+if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND PYBIND_FOUND)
     alta_test_python(NAME "python_test_arguments"
-                     COMMAND "python" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-arguments.py")
+                     COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-arguments.py")
 
     alta_test_python(NAME "python_test_vec"
-                     COMMAND "python" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-vec.py")
+                     COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-vec.py")
 
     alta_test_python(NAME "python_test_function"
-                     COMMAND "python" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-python-function.py")
+                     COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-python-function.py")
 endif()
 
 # add a target to generate API documentation with Doxygen
