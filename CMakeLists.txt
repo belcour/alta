@@ -321,13 +321,13 @@ endforeach()
 
 if(PYTHONLIBS_FOUND AND PYBIND_FOUND)
     alta_test_python(NAME "python_test_arguments"
-                     COMMAND "python3" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-arguments.py")
+                     COMMAND "python" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-arguments.py")
 
     alta_test_python(NAME "python_test_vec"
-                     COMMAND "python3" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-vec.py")
+                     COMMAND "python" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-vec.py")
 
     alta_test_python(NAME "python_test_function"
-                     COMMAND "python3" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-python-function.py")
+                     COMMAND "python" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-python-function.py")
 endif()
 
 # add a target to generate API documentation with Doxygen
