@@ -7,7 +7,7 @@ project (alta CXX)
 
 # Set Python version number
 set(Python_Version "3" CACHE STRING "Python interface version (default Python 3)")
-set(Python_ADDITIONAL_VERSIONS $(Python_Version))
+set(Python_ADDITIONAL_VERSIONS ${Python_Version})
 
 # Require C++11 options
 set(CMAKE_CXX_STANDARD 11)
