@@ -37,6 +37,12 @@ static vec vec_sub(const vec& a, const vec& b) {
    return a - b;
 }
 
+/* Size of vec
+ */
+static size_t vec_size(const vec& a) {
+    return a.size();
+}
+
 /* Specific convert a vec to a string
  */
 static std::string vec_str(const vec& x) {
@@ -63,7 +69,7 @@ inline void register_vec(py::module& m) {
         }))
 		.def("__add__", &vec_add)
 		.def("__sub__", &vec_sub)
-		.def("__len__", &vec::size)
+		.def("__len__", &vec_size)
         .def("__getitem__", [](const vec &s, unsigned int i) {
             if (i >= s.size()) throw py::index_error();
             return s[i];

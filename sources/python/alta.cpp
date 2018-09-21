@@ -287,7 +287,7 @@ static void brdf2data(const ptr<function>& f, ptr<data>& d) {
 			x[d->parametrization().dimX() + j] = y[j];
 		}
 
-		d->set(i, y);
+		d->set(i, x);
 	}
 }
 
