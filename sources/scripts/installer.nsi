@@ -64,7 +64,7 @@ Section "ALTA" SecMain
 
   ; Python package
   SetOutPath $INSTDIR\python
-  File /nonfatal /r "${ALTADIR}\build\python\alta.dll"
+  File /nonfatal /r "${ALTADIR}\build\python\alta.pyd"
 
   # Update the ENVIROMNENT
   WriteRegStr HKCU "Environment" "ALTA_DIR"   '$INSTDIR'

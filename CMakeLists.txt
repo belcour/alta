@@ -209,15 +209,15 @@ target_link_libraries(rational_fitter_parallel quadprog)
 
 # TODO: Add check before compiling  IPOPT
 if (CERES_FOUND)
-    include_directories( ${CERES_INCLUDE_DIR} )
     alta_add_plugin(nonlinear_fitter_ceres                  nonlinear_fitter_ceres/fitter.cpp)
     target_link_libraries(nonlinear_fitter_ceres ${CERES_LIBRARIES})
+    target_include_directories(nonlinear_fitter_ceres PUBLIC ${CERES_INCLUDE_DIR})
     list(APPEND nonlinear_fitters ceres)
 endif()
 if (NLOPT_FOUND)
-    include_directories( ${NLOPT_INCLUDE_DIRS} )
     alta_add_plugin(nonlinear_fitter_nlopt                  nonlinear_fitter_nlopt/fitter.cpp)
     target_link_libraries(nonlinear_fitter_nlopt ${NLOPT_LIBRARIES})
+    target_include_directories(nonlinear_fitter_nlopt PUBLIC ${NLOPT_INCLUDE_DIRS})
     list(APPEND nonlinear_fitters nlopt)
 endif()
 #alta_add_plugin(nonlinear_fitter_ipopt                  nonlinear_fitter_ipopt/fitter.cpp)
@@ -306,9 +306,9 @@ add_test(NAME "brdf2data_kirby"
                              "--data-file" "${CMAKE_SOURCE_DIR}/sources/tests/Kirby2.dat"
          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
-add_test(NAME "data2stats_kirby"
-         COMMAND "data2stats" "--input"     "Kirby2.dat"
-                              "--ref"       "${CMAKE_SOURCE_DIR}/sources/tests/Kirby2.dat"
+add_test(NAME "data2stats_pinkfelt"
+         COMMAND "data2stats" "--input"     "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
+                              "--ref"       "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 foreach(fitter IN ITEMS ${nonlinear_fitters})
