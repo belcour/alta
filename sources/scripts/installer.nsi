@@ -55,7 +55,10 @@ Section "ALTA" SecMain
   File /nonfatal /r "${ALTADIR}\external\build\bin\*.dll"
 
   SetOutPath $INSTDIR\lib
-  File /nonfatal /r "${ALTADIR}\build\core\core.lib"
+  File /nonfatal /r "${ALTADIR}\build\lib\core.lib"
+
+  SetOutPath $INSTDIR\include\alta
+  File /nonfatal /r "${ALTADIR}\sources\core\*.h"
 
   SetOutPath $INSTDIR\plugins
   File /nonfatal /r "${ALTADIR}\build\plugins\nonlinear*.dll"
