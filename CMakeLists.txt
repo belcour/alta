@@ -193,9 +193,28 @@ target_link_libraries(rational_fitter_parallel quadprog)
 
 # TODO: Add check before compiling  IPOPT
 if (CERES_FOUND)
-    include_directories( ${CERES_INCLUDE_DIR} )
+
+
+    #  TODO: UNCOMMENT ME FOR STATIC CERES
+    find_package(Glog)
+    # ${glog_DIR} seems to be the only variable set
+    message(${glog_DIR})
+
+    #find_package(gflags)
+    find_package(gflags COMPONENTS shared)
+    if( GFLAGS_FOUND ) 
+        message(" TOTOTOT ")
+        message("${GFLAGS_LIBRARIES}")
+        message(${GFLAGS_INCLUDE_DIRS})
+        message(${GFLAGS_LIBRARY})
+        message(" TOTOTOT ")
+    endif()
+#    include_directories( ${CERES_INCLUDE_DIR} )
     alta_add_plugin(nonlinear_fitter_ceres                  nonlinear_fitter_ceres/fitter.cpp)
     target_link_libraries(nonlinear_fitter_ceres ${CERES_LIBRARIES})
+    target_include_directories(nonlinear_fitter_ceres PUBLIC ${CERES_INCLUDE_DIR})
+    #target_include_directories(nonlinear_fitter_ceres PUBLIC ${CERES_INCLUDE_DIR} ${glog_DIR}/../../../include/)
+    #target_link_libraries(nonlinear_fitter_ceres ${CERES_INCLUDE_DIR}/../lib/${CERES_LIBRARIES}.lib)
 endif()
 if (NLOPT_FOUND)
     include_directories( ${NLOPT_INCLUDE_DIRS} )
@@ -230,6 +249,8 @@ endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/softs)
 
+set(list_softs brdf2brdf brdf2data brdf2gnuplot brdf2stats data2data data2brdf data2stats data2moments)
+
 alta_add_soft(brdf2brdf    brdf2brdf/main.cpp)
 alta_add_soft(brdf2data    brdf2data/main.cpp)
 alta_add_soft(brdf2gnuplot brdf2gnuplot/main.cpp)
@@ -239,6 +260,85 @@ alta_add_soft(data2data    data2data/main.cpp)
 alta_add_soft(data2brdf    data2brdf/main.cpp)
 alta_add_soft(data2stats   data2stats/data2stats.cpp)
 alta_add_soft(data2moments data2moments/main.cpp)
+
+#############################
+#      INSTALLATION         # 
+#############################
+set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin/)
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/)
+set(PLUGIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/plugins/)
+set(PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/python/)
+
+#INSTALL TARGETS = alta.lib and alta.pyd
+install( TARGETS ${PROJECT_NAME} DESTINATION ${LIB_INSTALL_DIR})
+install( TARGETS core DESTINATION ${LIB_INSTALL_DIR})
+
+#INSTALL SOFT
+foreach(soft IN ITEMS ${list_softs})
+  install( TARGETS ${soft} DESTINATION ${BIN_INSTALL_DIR} )
+endforeach(soft IN ITEMS)
+
+set(list_io_plugins data_merl data_astm data_utia data_brdf_slice)
+foreach(plugin IN ITEMS ${list_io_plugins})
+  install( TARGETS ${plugin} DESTINATION ${PLUGIN_INSTALL_DIR} )
+endforeach(plugin IN ITEMS)
+
+set(list_fitter_plugins 
+    nonlinear_fitter_eigen
+    rational_fitter_leastsquare
+    rational_fitter_quadprog 
+    rational_fitter_parallel
+    rational_fitter_eigen )
+
+foreach(nlf IN ITEMS ${list_fitter_plugins})
+  install( TARGETS ${nlf} DESTINATION ${PLUGIN_INSTALL_DIR} )
+endforeach(nlf IN ITEMS)
+
+if(${CERES_FOUND})
+  install( TARGETS nonlinear_fitter_ceres DESTINATION ${PLUGIN_INSTALL_DIR} )
+  # KIND of ugly 
+  # TODO: IMPROVE ME
+  install( FILES ${CERES_INCLUDE_DIR}/../bin/${CERES_LIBRARIES}.dll DESTINATION ${PLUGIN_INSTALL_DIR} )
+  install( FILES ${CERES_INCLUDE_DIR}/../bin/${CERES_LIBRARIES}.dll DESTINATION ${BIN_INSTALL_DIR} )
+  install( FILES ${glog_DIR}/../../../bin/glog.dll DESTINATION ${BIN_INSTALL_DIR} )
+  install( FILES ${GFLAGS_INCLUDE_DIRS}/../bin/gflags.dll DESTINATION ${BIN_INSTALL_DIR} )
+
+  
+
+endif()
+
+
+
+set(list_functions_plugins 
+    nonlinear_function_abc
+    nonlinear_function_beckmann
+    nonlinear_function_blinn
+    nonlinear_function_diffuse
+    nonlinear_function_lafortune
+    nonlinear_function_retroblinn
+    nonlinear_function_retroyoo
+    nonlinear_function_retrobeckmann
+    nonlinear_function_sgd
+    nonlinear_function_spherical_gaussian
+    nonlinear_function_ward
+    rational_function_cosine
+    rational_function_chebychev
+    rational_function_legendre
+    nonlinear_fresnel_schlick
+    nonlinear_fresnel_normalized_schlick )
+
+foreach(nlf IN ITEMS ${list_functions_plugins})
+  install( TARGETS ${nlf} DESTINATION ${PLUGIN_INSTALL_DIR} )
+endforeach(nlf IN ITEMS)
+
+
+set(CMAKE_INSTALL_OPENMP_LIBRARIES TRUE)
+#set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
+include(InstallRequiredSystemLibraries)
+
+# INSTALL WINDOWS DLL
+install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION ${BIN_INSTALL_DIR} COMPONENT Libraries)
+install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION ${PLUGIN_INSTALL_DIR} COMPONENT Libraries)
 
 
 #############################

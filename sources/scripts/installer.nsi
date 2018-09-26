@@ -51,29 +51,33 @@ RequestExecutionLevel user
 Section "ALTA" SecMain
 
   SetOutPath $INSTDIR\bin
-  File /nonfatal /r "${ALTADIR}\build\softs\*.exe"
-#NO MORE?:  File /nonfatal /r "${ALTADIR}\external\build\bin\*.dll"
+  File /nonfatal /r "${ALTADIR}\test-release\bin\*.exe"
+  File /nonfatal /r "${ALTADIR}\test-release\bin\*.dll"
+#NO MORE?:  File /nonfatal /r "${ALTADIR}\external\test-release\bin\bin\*.dll"
 
   SetOutPath $INSTDIR\lib
-  #File /nonfatal /r "${ALTADIR}\build\core\core.lib"
-  File /nonfatal /r "${ALTADIR}\build\lib\core.lib"
+  #File /nonfatal /r "${ALTADIR}\test-release\bin\core\core.lib"
+  File /nonfatal /r "${ALTADIR}\test-release\lib\core.lib"
 
   SetOutPath $INSTDIR\plugins
-  File /nonfatal /r "${ALTADIR}\build\plugins\nonlinear*.dll"
-  File /nonfatal /r "${ALTADIR}\build\plugins\rational*.dll"
-  File /nonfatal /r "${ALTADIR}\build\plugins\data*.dll"
+   File /nonfatal /r "${ALTADIR}\test-release\plugins\*.dll" 
+   File /nonfatal /r "${ALTADIR}\test-release\plugins\*.lib" 
+#  File /nonfatal /r "${ALTADIR}\test-release\plugins\nonlinear*.dll"
+#  File /nonfatal /r "${ALTADIR}\test-release\plugins\rational*.dll"
+#  File /nonfatal /r "${ALTADIR}\test-release\plugins\data*.dll"
 
   ; Python package
   SetOutPath $INSTDIR\python
-  #NO MORE> File /nonfatal /r "${ALTADIR}\build\python\alta.dll"
-  File /nonfatal /r "${ALTADIR}\build\python\alta.pyd"
-  File /nonfatal /r "${ALTADIR}\build\python\*.dll"
+  #NO MORE> File /nonfatal /r "${ALTADIR}\test-release\bin\python\alta.dll"
+  File /nonfatal /r "${ALTADIR}\test-release\lib\alta.pyd"
+  File /nonfatal /r "${ALTADIR}\test-release\lib\alta.lib"
 
   # Update the ENVIROMNENT
   WriteRegStr HKCU "Environment" "ALTA_DIR"   '$INSTDIR'
   WriteRegStr HKCU "Environment" "ALTA_PLUGIN_PATH"   '$INSTDIR\plugins'
   ${EnvVarUpdate} $0 "PATH"     "A" "HKCU" '$INSTDIR\bin'
-  ${EnvVarUpdate} $1 "PYTHONPATH" "A" "HKCU" '$INSTDIR\python'
+#  ${EnvVarUpdate} $1 "PYTHONPATH" "A" "HKCU" '$INSTDIR\python'
+  ${EnvVarUpdate} $1 "PYTHONPATH" "A" "HKCU" '$INSTDIR\lib'
 
 
 
