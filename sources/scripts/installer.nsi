@@ -51,33 +51,32 @@ RequestExecutionLevel user
 Section "ALTA" SecMain
 
   SetOutPath $INSTDIR\bin
-  File /nonfatal /r "${ALTADIR}\test-release\bin\*.exe"
-  File /nonfatal /r "${ALTADIR}\test-release\bin\*.dll"
-#NO MORE?:  File /nonfatal /r "${ALTADIR}\external\test-release\bin\bin\*.dll"
+  File /nonfatal /r "${ALTADIR}\build\bin\*.exe"
+  File /nonfatal /r "${ALTADIR}\build\bin\*.dll"
+#NO MORE?:  File /nonfatal /r "${ALTADIR}\external\build\bin\bin\*.dll"
 
   SetOutPath $INSTDIR\lib
-  #File /nonfatal /r "${ALTADIR}\test-release\bin\core\core.lib"
-  File /nonfatal /r "${ALTADIR}\test-release\lib\core.lib"
+  #File /nonfatal /r "${ALTADIR}\build\bin\core\core.lib"
+  File /nonfatal /r "${ALTADIR}\build\lib\core.lib"
 
   SetOutPath $INSTDIR\plugins
-   File /nonfatal /r "${ALTADIR}\test-release\plugins\*.dll" 
-   File /nonfatal /r "${ALTADIR}\test-release\plugins\*.lib" 
-#  File /nonfatal /r "${ALTADIR}\test-release\plugins\nonlinear*.dll"
-#  File /nonfatal /r "${ALTADIR}\test-release\plugins\rational*.dll"
-#  File /nonfatal /r "${ALTADIR}\test-release\plugins\data*.dll"
+   File /nonfatal /r "${ALTADIR}\build\plugins\*.dll" 
+   File /nonfatal /r "${ALTADIR}\build\plugins\*.lib" 
+#  File /nonfatal /r "${ALTADIR}\build\plugins\nonlinear*.dll"
+#  File /nonfatal /r "${ALTADIR}\build\plugins\rational*.dll"
+#  File /nonfatal /r "${ALTADIR}\build\plugins\data*.dll"
 
   ; Python package
   SetOutPath $INSTDIR\python
-  #NO MORE> File /nonfatal /r "${ALTADIR}\test-release\bin\python\alta.dll"
-  File /nonfatal /r "${ALTADIR}\test-release\lib\alta.pyd"
-  File /nonfatal /r "${ALTADIR}\test-release\lib\alta.lib"
+  #NO MORE> File /nonfatal /r "${ALTADIR}\build\bin\python\alta.dll"
+  File /nonfatal /r "${ALTADIR}\build\lib\alta.pyd"
+  File /nonfatal /r "${ALTADIR}\build\lib\alta.lib"
 
   # Update the ENVIROMNENT
   WriteRegStr HKCU "Environment" "ALTA_DIR"   '$INSTDIR'
   WriteRegStr HKCU "Environment" "ALTA_PLUGIN_PATH"   '$INSTDIR\plugins'
   ${EnvVarUpdate} $0 "PATH"     "A" "HKCU" '$INSTDIR\bin'
-#  ${EnvVarUpdate} $1 "PYTHONPATH" "A" "HKCU" '$INSTDIR\python'
-  ${EnvVarUpdate} $1 "PYTHONPATH" "A" "HKCU" '$INSTDIR\lib'
+  ${EnvVarUpdate} $1 "PYTHONPATH" "A" "HKCU" '$INSTDIR\python'
 
 
 
@@ -99,20 +98,23 @@ Section "Uninstall"
 
   Delete "$INSTDIR\Uninstall.exe"
 
-  ;Remove the directory and all its content!
-  RMDir /r "$INSTDIR"
-
-
-  ;Remove ALTA_PLUGIN_PATH AND ALTA_DIR env. variable
-  DeleteRegKey HKCU "ALTA_DIR"
-  DeleteRegKey HKCU "ALTA_PLUGIN_PATH"
-
 
   ${un.EnvVarUpdate} $0 "PATH" "R" "HKCU" "$INSTDIR"
   ${un.EnvVarUpdate} $0 "PYTHONPATH" "R" "HKCU" "$INSTDIR\python"
 
+  ;Remove ALTA_PLUGIN_PATH AND ALTA_DIR env. variable
+  DeleteRegValue HKCU "Environment" "ALTA_DIR"
+  DeleteRegValue HKCU "Environment" "ALTA_PLUGIN_PATH"
+
+  ;Remove the directory and all its content!
+  RMDir /r "$INSTDIR"
 
   ; make sure windows knows about the change
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
 
+  
 SectionEnd
+
+Function un.onUninstSuccess
+    MessageBox MB_OK "Congrats, ALTA has been renoved. Check that the ALTA_DIR ALTA_PLUGIN_PATH environment variables have been removed"
+FunctionEnd
