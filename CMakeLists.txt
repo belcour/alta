@@ -13,6 +13,16 @@ set(Python_ADDITIONAL_VERSIONS ${Python_Version})
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if( MSVC )
+    foreach(flag_var
+            CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+    if(${flag_var} MATCHES "/MD")
+        string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+    endif(${flag_var} MATCHES "/MD")
+    endforeach(flag_var)
+endif()
+
 
 #############################
 #        Dependencies       #
@@ -27,6 +37,23 @@ find_package(PythonLibs)
 find_package(Doxygen)
 find_package(Ceres)
 find_package(NLOPT)
+find_package(Flann)
+
+# TO DEBUG
+# if(NLOPT_FOUND)
+#   message(" NLOPT FOUND")
+#   message(${NLOPT_INCLUDE_DIRS})
+#   message(${NLOPT_LIBRARIES})
+#   message(${NLOPT_VERSION})
+#   message(${NLOPT_LIB_DIRS})
+# endif()
+
+
+# if (FLANN_FOUND)
+#     message(" FLANN FOUND")
+#     message(${FLANN_INCLUDE_DIRS})
+#     message(${FLANN_LIBRARIES})
+# endif()
 
 add_definitions(-DALTA_PLUGIN_DIRECTORY="/usr/lib/alta_plugins")
 
@@ -38,7 +65,7 @@ include_directories("external/pybind11/include")
 # Look for header only dependencies
 find_file(EIGEN_FOUND  "Eigen/Core"      HINTS ${EIGEN3_INCLUDE_DIR})
 find_file(CATCH_FOUND  "catch.hpp"       HINTS external/Catch/include)
-find_file(FLANN_FOUND  "flann/flann.hpp")
+#find_file(FLANN_FOUND  "flann/flann.hpp")
 find_file(PYBIND_FOUND "pybind11/pybind11.h" HINTS "external/pybind11/include")
 
 # Check if Eigen is found
@@ -169,6 +196,8 @@ alta_add_plugin(data_brdf_slice data_io/slice.cpp)
 alta_add_plugin(data_grid       data_interpolants/grid.cpp)
 if(FLANN_FOUND)
     alta_add_plugin(data_rbf    data_interpolants/rbf.cpp)
+    target_link_libraries(data_rbf "C:/Program Files/flann/lib/flann_cpp_s.lib" )
+    target_include_directories(data_rbf PUBLIC ${FLANN_INCLUDE_DIRS} )
 endif()
 #alta_add_plugin(data_matlab data_interpolants/matlab.cpp)
 
@@ -209,10 +238,25 @@ target_link_libraries(rational_fitter_parallel quadprog)
 
 # TODO: Add check before compiling  IPOPT
 if (CERES_FOUND)
-    alta_add_plugin(nonlinear_fitter_ceres                  nonlinear_fitter_ceres/fitter.cpp)
+    #  TODO: UNCOMMENT ME FOR STATIC CERES
+    find_package(Glog)
+    # ${glog_DIR} seems to be the only variable set
+    # message(${glog_DIR})
+
+    find_package(gflags COMPONENTS shared)
+    # if( GFLAGS_FOUND )
+    #     message(" TOTOTOT ")
+    #     message("${GFLAGS_LIBRARIES}")
+    #     message(${GFLAGS_INCLUDE_DIRS})
+    #     message(${GFLAGS_LIBRARY})
+    #     message(" TOTOTOT ")
+    # endif()
+#    include_directories( ${CERES_INCLUDE_DIR} )
+    alta_add_plugin(nonlinear_fitter_ceres nonlinear_fitter_ceres/fitter.cpp)
     target_link_libraries(nonlinear_fitter_ceres ${CERES_LIBRARIES})
     target_include_directories(nonlinear_fitter_ceres PUBLIC ${CERES_INCLUDE_DIR})
-    list(APPEND nonlinear_fitters ceres)
+    #target_include_directories(nonlinear_fitter_ceres PUBLIC ${CERES_INCLUDE_DIR} ${glog_DIR}/../../../include/)
+    #target_link_libraries(nonlinear_fitter_ceres ${CERES_INCLUDE_DIR}/../lib/${CERES_LIBRARIES}.lib)
 endif()
 if (NLOPT_FOUND)
     alta_add_plugin(nonlinear_fitter_nlopt                  nonlinear_fitter_nlopt/fitter.cpp)
@@ -248,6 +292,8 @@ endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/softs)
 
+set(list_softs brdf2brdf brdf2data brdf2gnuplot brdf2stats data2data data2brdf data2stats data2moments)
+
 alta_add_soft(brdf2brdf    brdf2brdf/main.cpp)
 alta_add_soft(brdf2data    brdf2data/main.cpp)
 alta_add_soft(brdf2gnuplot brdf2gnuplot/main.cpp)
@@ -257,6 +303,85 @@ alta_add_soft(data2data    data2data/main.cpp)
 alta_add_soft(data2brdf    data2brdf/main.cpp)
 alta_add_soft(data2stats   data2stats/data2stats.cpp)
 alta_add_soft(data2moments data2moments/main.cpp)
+
+#############################
+#      INSTALLATION         # 
+#############################
+set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin/)
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/)
+set(PLUGIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/plugins/)
+set(PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/python/)
+
+#INSTALL TARGETS = alta.lib and alta.pyd
+install( TARGETS ${PROJECT_NAME} DESTINATION ${LIB_INSTALL_DIR})
+install( TARGETS core DESTINATION ${LIB_INSTALL_DIR})
+
+#INSTALL SOFT
+foreach(soft IN ITEMS ${list_softs})
+  install( TARGETS ${soft} DESTINATION ${BIN_INSTALL_DIR} )
+endforeach(soft IN ITEMS)
+
+set(list_io_plugins data_merl data_astm data_utia data_brdf_slice)
+foreach(plugin IN ITEMS ${list_io_plugins})
+  install( TARGETS ${plugin} DESTINATION ${PLUGIN_INSTALL_DIR} )
+endforeach(plugin IN ITEMS)
+
+set(list_fitter_plugins 
+    nonlinear_fitter_eigen
+    rational_fitter_leastsquare
+    rational_fitter_quadprog 
+    rational_fitter_parallel
+    rational_fitter_eigen )
+
+foreach(nlf IN ITEMS ${list_fitter_plugins})
+  install( TARGETS ${nlf} DESTINATION ${PLUGIN_INSTALL_DIR} )
+endforeach(nlf IN ITEMS)
+
+if(${CERES_FOUND})
+  install( TARGETS nonlinear_fitter_ceres DESTINATION ${PLUGIN_INSTALL_DIR} )
+  # KIND of ugly 
+  # TODO: IMPROVE ME
+  install( FILES ${CERES_INCLUDE_DIR}/../bin/${CERES_LIBRARIES}.dll DESTINATION ${PLUGIN_INSTALL_DIR} )
+  install( FILES ${CERES_INCLUDE_DIR}/../bin/${CERES_LIBRARIES}.dll DESTINATION ${BIN_INSTALL_DIR} )
+  install( FILES ${glog_DIR}/../../../bin/glog.dll DESTINATION ${BIN_INSTALL_DIR} )
+  install( FILES ${GFLAGS_INCLUDE_DIRS}/../bin/gflags.dll DESTINATION ${BIN_INSTALL_DIR} )
+
+  
+
+endif()
+
+
+
+set(list_functions_plugins 
+    nonlinear_function_abc
+    nonlinear_function_beckmann
+    nonlinear_function_blinn
+    nonlinear_function_diffuse
+    nonlinear_function_lafortune
+    nonlinear_function_retroblinn
+    nonlinear_function_retroyoo
+    nonlinear_function_retrobeckmann
+    nonlinear_function_sgd
+    nonlinear_function_spherical_gaussian
+    nonlinear_function_ward
+    rational_function_cosine
+    rational_function_chebychev
+    rational_function_legendre
+    nonlinear_fresnel_schlick
+    nonlinear_fresnel_normalized_schlick )
+
+foreach(nlf IN ITEMS ${list_functions_plugins})
+  install( TARGETS ${nlf} DESTINATION ${PLUGIN_INSTALL_DIR} )
+endforeach(nlf IN ITEMS)
+
+
+set(CMAKE_INSTALL_OPENMP_LIBRARIES TRUE)
+#set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
+include(InstallRequiredSystemLibraries)
+
+# INSTALL WINDOWS DLL
+install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION ${BIN_INSTALL_DIR} COMPONENT Libraries)
+install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION ${PLUGIN_INSTALL_DIR} COMPONENT Libraries)
 
 
 #############################
@@ -306,10 +431,10 @@ add_test(NAME "brdf2data_kirby"
                              "--data-file" "${CMAKE_SOURCE_DIR}/sources/tests/Kirby2.dat"
          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
-add_test(NAME "data2stats_pinkfelt"
-         COMMAND "data2stats" "--input"     "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
-                              "--ref"       "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
-         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+ #add_test(NAME "data2stats_pinkfelt"
+ #         COMMAND "data2stats" "--input"     "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
+ #                              "--ref"       "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
+ #         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 foreach(fitter IN ITEMS ${nonlinear_fitters})
     alta_test(NAME "data2brdf_pinkfelt_${fitter}"

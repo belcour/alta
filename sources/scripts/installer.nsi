@@ -51,8 +51,9 @@ RequestExecutionLevel user
 Section "ALTA" SecMain
 
   SetOutPath $INSTDIR\bin
-  File /nonfatal /r "${ALTADIR}\build\softs\*.exe"
-  File /nonfatal /r "${ALTADIR}\external\build\bin\*.dll"
+  File /nonfatal /r "${ALTADIR}\build\bin\*.exe"
+  File /nonfatal /r "${ALTADIR}\build\bin\*.dll"
+#NO MORE?:  File /nonfatal /r "${ALTADIR}\external\build\bin\bin\*.dll"
 
   SetOutPath $INSTDIR\lib
   File /nonfatal /r "${ALTADIR}\build\lib\core.lib"
@@ -60,14 +61,18 @@ Section "ALTA" SecMain
   SetOutPath $INSTDIR\include\alta
   File /nonfatal /r "${ALTADIR}\sources\core\*.h"
 
+
   SetOutPath $INSTDIR\plugins
-  File /nonfatal /r "${ALTADIR}\build\plugins\nonlinear*.dll"
-  File /nonfatal /r "${ALTADIR}\build\plugins\rational*.dll"
-  File /nonfatal /r "${ALTADIR}\build\plugins\data*.dll"
+   File /nonfatal /r "${ALTADIR}\build\plugins\*.dll" 
+   File /nonfatal /r "${ALTADIR}\build\plugins\*.lib" 
+#  File /nonfatal /r "${ALTADIR}\build\plugins\nonlinear*.dll"
+#  File /nonfatal /r "${ALTADIR}\build\plugins\rational*.dll"
+#  File /nonfatal /r "${ALTADIR}\build\plugins\data*.dll"
 
   ; Python package
   SetOutPath $INSTDIR\python
-  File /nonfatal /r "${ALTADIR}\build\python\alta.pyd"
+  File /nonfatal /r "${ALTADIR}\build\lib\alta.pyd"
+  File /nonfatal /r "${ALTADIR}\build\lib\alta.lib"
 
   # Update the ENVIROMNENT
   WriteRegStr HKCU "Environment" "ALTA_DIR"   '$INSTDIR'
@@ -95,20 +100,23 @@ Section "Uninstall"
 
   Delete "$INSTDIR\Uninstall.exe"
 
-  ;Remove the directory and all its content!
-  RMDir /r "$INSTDIR"
-
-
-  ;Remove ALTA_PLUGIN_PATH AND ALTA_DIR env. variable
-  DeleteRegKey HKCU "ALTA_DIR"
-  DeleteRegKey HKCU "ALTA_PLUGIN_PATH"
-
 
   ${un.EnvVarUpdate} $0 "PATH" "R" "HKCU" "$INSTDIR"
   ${un.EnvVarUpdate} $0 "PYTHONPATH" "R" "HKCU" "$INSTDIR\python"
 
+  ;Remove ALTA_PLUGIN_PATH AND ALTA_DIR env. variable
+  DeleteRegValue HKCU "Environment" "ALTA_DIR"
+  DeleteRegValue HKCU "Environment" "ALTA_PLUGIN_PATH"
+
+  ;Remove the directory and all its content!
+  RMDir /r "$INSTDIR"
 
   ; make sure windows knows about the change
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
 
+  
 SectionEnd
+
+Function un.onUninstSuccess
+    MessageBox MB_OK "Congrats, ALTA has been renoved. Check that the ALTA_DIR ALTA_PLUGIN_PATH environment variables have been removed"
+FunctionEnd

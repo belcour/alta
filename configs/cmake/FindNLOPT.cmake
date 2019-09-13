@@ -16,6 +16,8 @@
 # NLOPT_VERSION
 
 # 2018 : SMALL MODIFICATIONS FROM R.P. romain dot pacanowski @ institutoptique DOT fr
+# NLOPT_LIB_DIRS : the paths to the nlopt libraries
+# SETTING A version even if pkg_config is not available
 
 find_package(PkgConfig QUIET)
 
@@ -36,8 +38,21 @@ find_library(NLOPT_LIBRARIES
     NAMES nlopt nlopt_cxx
     HINTS ${PC_NLOPT_LIBDIR} "C:/Program Files/NLOPT/lib")
 
+# Add-on from RP.
+# Libraries Path
+find_path(NLOPT_LIB_DIRS
+    NAMES nlopt.lib nlopt.dll nlopt-0.dll
+    HINTS ${PC_NLOPT_LIBDIR} 
+    PATHS "C:/Program Files/NLOPT/lib/" )
+
+
 # Version
-set(NLOPT_VERSION ${PC_NLOPT_VERSION})
+if(DEFINED ${PC_NLOPT_VERSION})
+  set(NLOPT_VERSION ${PC_NLOPT_VERSION})
+else()
+  set(NLOPT_VERSION "VERSION NOT FOUND")
+endif()
+
 
 # Set (NAME)_FOUND if all the variables and the version are satisfied.
 include(FindPackageHandleStandardArgs)
