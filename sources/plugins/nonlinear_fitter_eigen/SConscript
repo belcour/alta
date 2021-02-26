@@ -10,7 +10,7 @@ conf = Configure(env)
 if conf.CheckCXXHeader('unsupported/Eigen/LevenbergMarquardt'):
   build_lib = True
 else:
-  print "<<WARNING>> Unsupported Eigen LevenbergMarquardt was not found"
+  print ("<<WARNING>> Unsupported Eigen LevenbergMarquardt was not found")
 
 env = conf.Finish()
 

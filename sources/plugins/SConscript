@@ -1,6 +1,8 @@
 # Plug-ins.
 Import('env')
 import os
+import functools
+import itertools
 
 plugins = [ 'data_interpolants',
             'data_io',
@@ -51,10 +53,10 @@ def build_plugin(directory):
 
 def display_status(status):
   name, status = status
-  print "    " + name
+  print("    " + name)
 
 def display_target(target):
-  print "    " + os.path.basename(target.abspath)
+  print("    " + os.path.basename(target.abspath))
 
 def is_built(status):
   _, status = status
@@ -69,34 +71,42 @@ def status_targets(status):
   return targets
 
 # Build them all!
-status = map(build_plugin, plugins)
-
+status = list(map(build_plugin, plugins))
 # SConscript files of individual directories return a list of targets,
 # because each directory may build several plugins.
 targets = map(status_targets, status)
+a_flat_list_of_targets = list( itertools.chain(*(list(targets))))
 
 if not GetOption('silent') and not GetOption('clean'):
-  print ""
-  print "***** Summary of the plug-ins being built *****"
-  print ""
-  print "  The following plug-ins are built:"
+  print("")
+  print("***** Summary of the plug-ins being built *****")
+  print("")
+  print("  The following plug-ins are built:")
 
   # Here we display a list of plugins.
-  map(display_target, reduce(lambda x, y: x + y, targets, []))
-  print ""
+  #map(display_target, functools.reduce(lambda x, y: x + y, targets, []))
 
-  omitted=filter(is_not_built, status)
+  #Python 3 fix by using list() we force the output
+  list(map(display_target, a_flat_list_of_targets))
+
+  print("")
+
+  omitted=list(filter(is_not_built, status))
+
   if len(omitted) > 0:
-    print "  The following directories are *not* built:"
+    print("  The following directories are *not* built:")
 
     # Here we display a list of directories, not plugins.  We don't
     # have access to the plugins that have been omitted, in the case
     # of directories that contain several plugins.  (FIXME)
-    map(display_status, omitted)
-    print ""
-    print "  See 'documents/install.dox' or <http://alta.gforge.inria.fr/install.html>"
-    print "  for a list of optional dependencies and associated plugins."
-    print "  See 'config.log' for details."
-    print ""
 
-env.Install(env['INSTALL_PREFIX'] + '/lib/alta', targets)
+    #Python 3 fix by using list() we force the output
+    list(map(display_status, omitted))
+
+    print("")
+    print("  See 'documents/install.dox' or <http://alta.gforge.inria.fr/install.html>")
+    print("  for a list of optional dependencies and associated plugins.")
+    print("  See 'config.log' for details.")
+    print("")
+
+env.Install(env['INSTALL_PREFIX'] + '/lib/alta', a_flat_list_of_targets)
