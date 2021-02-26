@@ -25,8 +25,7 @@ before_install:
    - eval "${MATRIX_EVAL}"
    - echo "${builder}"
    - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then
-        brew update;
-        brew install scons eigen ceres-solver;
+        pip install --user scons;
      fi
 
 script:

@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.2)
-project (alta CXX)
+project (alta VERSION 1.0.0 LANGUAGES CXX)
 
 #############################
 #      Preconfiguration     #
@@ -100,11 +100,11 @@ function(alta_test)
     set(oneValueArgs NAME)
     set(multiValueArgs COMMAND)
     cmake_parse_arguments(TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    
+
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND}
              WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     set_tests_properties("${TEST_NAME}"
-                         PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")  
+                         PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins")
 endfunction(alta_test)
 
 function(alta_test_python)
@@ -112,11 +112,11 @@ function(alta_test_python)
     set(oneValueArgs NAME)
     set(multiValueArgs COMMAND)
     cmake_parse_arguments(TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    
+
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND}
              WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     set_tests_properties("${TEST_NAME}"
-        PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins;PYTHONPATH=${CMAKE_BINARY_DIR}/python")  
+        PROPERTIES ENVIRONMENT "ALTA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/plugins;PYTHONPATH=${CMAKE_BINARY_DIR}/python")
 endfunction(alta_test_python)
 
 function(alta_test_unit name sources)
@@ -196,7 +196,11 @@ alta_add_plugin(data_brdf_slice data_io/slice.cpp)
 alta_add_plugin(data_grid       data_interpolants/grid.cpp)
 if(FLANN_FOUND)
     alta_add_plugin(data_rbf    data_interpolants/rbf.cpp)
-    target_link_libraries(data_rbf "C:/Program Files/flann/lib/flann_cpp_s.lib" )
+    if(WIN32)
+        target_link_libraries(data_rbf "C:/Program Files/flann/lib/flann_cpp_s.lib" )
+    else()
+        target_link_libraries(data_rbf ${FLANN_LIBRARIES} )
+    endif()
     target_include_directories(data_rbf PUBLIC ${FLANN_INCLUDE_DIRS} )
 endif()
 #alta_add_plugin(data_matlab data_interpolants/matlab.cpp)
@@ -305,7 +309,7 @@ alta_add_soft(data2stats   data2stats/data2stats.cpp)
 alta_add_soft(data2moments data2moments/main.cpp)
 
 #############################
-#      INSTALLATION         # 
+#      INSTALLATION         #
 #############################
 set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin/)
 set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib/)
@@ -313,7 +317,10 @@ set(PLUGIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/plugins/)
 set(PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/python/)
 
 #INSTALL TARGETS = alta.lib and alta.pyd
-install( TARGETS ${PROJECT_NAME} DESTINATION ${LIB_INSTALL_DIR})
+if(PYTHONLIBS_FOUND AND PYBIND_FOUND )
+	install( TARGETS ${PROJECT_NAME} DESTINATION ${LIB_INSTALL_DIR})
+endif()
+
 install( TARGETS core DESTINATION ${LIB_INSTALL_DIR})
 
 #INSTALL SOFT
@@ -326,10 +333,10 @@ foreach(plugin IN ITEMS ${list_io_plugins})
   install( TARGETS ${plugin} DESTINATION ${PLUGIN_INSTALL_DIR} )
 endforeach(plugin IN ITEMS)
 
-set(list_fitter_plugins 
+set(list_fitter_plugins
     nonlinear_fitter_eigen
     rational_fitter_leastsquare
-    rational_fitter_quadprog 
+    rational_fitter_quadprog
     rational_fitter_parallel
     rational_fitter_eigen )
 
@@ -339,20 +346,20 @@ endforeach(nlf IN ITEMS)
 
 if(${CERES_FOUND})
   install( TARGETS nonlinear_fitter_ceres DESTINATION ${PLUGIN_INSTALL_DIR} )
-  # KIND of ugly 
+  # KIND of ugly
   # TODO: IMPROVE ME
   install( FILES ${CERES_INCLUDE_DIR}/../bin/${CERES_LIBRARIES}.dll DESTINATION ${PLUGIN_INSTALL_DIR} )
   install( FILES ${CERES_INCLUDE_DIR}/../bin/${CERES_LIBRARIES}.dll DESTINATION ${BIN_INSTALL_DIR} )
   install( FILES ${glog_DIR}/../../../bin/glog.dll DESTINATION ${BIN_INSTALL_DIR} )
   install( FILES ${GFLAGS_INCLUDE_DIRS}/../bin/gflags.dll DESTINATION ${BIN_INSTALL_DIR} )
 
-  
+
 
 endif()
 
 
 
-set(list_functions_plugins 
+set(list_functions_plugins
     nonlinear_function_abc
     nonlinear_function_beckmann
     nonlinear_function_blinn
@@ -442,7 +449,7 @@ foreach(fitter IN ITEMS ${nonlinear_fitters})
                       "--input"  "${CMAKE_SOURCE_DIR}/data/brdf/pink-felt-1d.alta"
                       "--output" "pink-felt-1d-${fitter}-blinn.func"
                       "--fitter" "nonlinear_fitter_${fitter}"
-                      "--func"   "[nonlinear_function_diffuse, nonlinear_function_blinn]") 
+                      "--func"   "[nonlinear_function_diffuse, nonlinear_function_blinn]")
 endforeach()
 
 if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND PYBIND_FOUND)
