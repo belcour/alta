@@ -13,6 +13,8 @@
 import os
 import sys
 import SCons.SConf as C
+print("<<INFO>> Python Information:"+ str(sys.version_info))
+print("<<INFO>> Current Platform: "+ str(sys.platform))
 
 # Arrange so that the 'obtain' module can always be imported.
 top_srcdir = Dir('.').srcnode().abspath
@@ -27,30 +29,29 @@ AddOption('--cfg', help='Specify a configuration file')
 ##
 configFile = GetOption('cfg')
 if configFile == None:
-
 	if sys.platform == 'win32':
 		configFile = "./configs/scons/config-windows-cl.py"
 	elif sys.platform == 'darwin':
 		configFile = "./configs/scons/config-macos-clang.py"
-	elif sys.platform == 'linux2':
+	elif sys.platform == 'linux2' or sys.platform =='linux':
 		configFile = "./configs/scons/config-linux-gcc.py"
 	else:
-		print '<<ERROR>> You need to specify a configuration file using:'
-		print '<<ERROR>>    scons --cfg=[filename]'
-		print '<<ERROR>> Please find example of configuration files in ${ALTA}/configs/scons/'
+		print ('<<ERROR>> You need to specify a configuration file using:')
+		print ('<<ERROR>>    scons --cfg=[filename]')
+		print ('<<ERROR>> Please find example of configuration files in ${ALTA}/configs/scons/')
 		Exit(1)
 #end
 
 if not os.path.exists(configFile):
-	print '<<ERROR>> the config file you specified \"' + configFile + '\" does not exists'
+	print ('<<ERROR>> the config file you specified \"' + configFile + '\" does not exists')
 	Exit(1)
 else:
-	print '<<INFO>> Using config file \"' + configFile + '\"'
+	print('<<INFO>> Using config file \"' + configFile + '\"')
 #end
 
 # List of C++ compilers we look for by default.
 cxx_compilers = ['g++', 'c++', 'clang++', 'cl' ]
-if(os.environ.has_key('CXX')):
+if(os.getenv('CXX')):
    cxx_compilers = [os.environ['CXX'], cxx_compilers]
 
 # List of Python 2.x interpreter names to look for.
@@ -185,7 +186,7 @@ def library_available(env, pkgspec='', lib='', header='',
     # assume that pkg-config got it right.
     result = True
   else:
-		result = conf.CheckLibWithHeader(pkgspec, header, language)
+	result = conf.CheckLibWithHeader(pkgspec, header, language)
 
   conf.Finish()
   return result
