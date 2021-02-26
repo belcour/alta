@@ -1,6 +1,5 @@
 language: cpp
 env:
-    - builder=scons
     - builder=cmake
 os:
     - linux
@@ -8,7 +7,6 @@ os:
 
 dist: trusty
 sudo: required
-
 addons:
     apt:
         sources:
@@ -16,35 +14,23 @@ addons:
         packages:
             - g++-6
             - cmake
+            - libboost-python-dev
             - libeigen3-dev
-            - libpython3-dev
-            - python3-numpy
 
 before_install:
    - OMP_NUM_THREADS=2
    - eval "${MATRIX_EVAL}"
    - echo "${builder}"
-   - if [ ${TRAVIS_OS_NAME} = 'osx' ]; then
-        pip install --user scons;
-     fi
 
 script:
    - git submodule init
    - git submodule update
-   - if [ ${builder} = 'scons' ]; then
-        scons;
-        scons tests;
-     else
-        mkdir build;
-        cd build;
-        cmake ..;
-        make -i;
-        make test;
-     fi
+   - mkdir build;
+   - cd build;
+   - cmake ..;
+   - make -i;
+   - make test;
 
 after_failure:
-   - if [ ${builder} = 'scons' ]; then
-        cat config.log;
-     else
-        cat Testing/Temporary/LastTest.log;
-     fi
+   - cat Testing/Temporary/LastTest.log
+
