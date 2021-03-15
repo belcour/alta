@@ -1,4 +1,6 @@
 
+stages:
+  - build
 
 pages:
   stage: build
