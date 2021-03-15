@@ -1,9 +1,5 @@
 
-stages:
-  - build
-
 pages:
-  stage: build
   only:
     - master
   script:
