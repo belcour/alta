@@ -13,3 +13,5 @@ pages:
       - public
   only:
     - master
+  tags:
+    - ubuntu1804
