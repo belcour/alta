@@ -1,0 +1,18 @@
+
+
+pages:
+  stage: build
+  only:
+    - master
+  script:
+    - cd documents
+    - doxygen doxyfile
+    - cd ..
+    - mkdir .public
+    - cp -r documents/doxgygen/html/* .public
+    - mv .public public
+  artifacts:
+    paths:
+    - public
+  tags:
+    - ubuntu
