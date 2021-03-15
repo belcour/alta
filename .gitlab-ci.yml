@@ -1,4 +1,3 @@
-
 pages:
   only:
     - master
@@ -13,4 +12,4 @@ pages:
     paths:
     - public
   tags:
-    - ubuntu
+    - ubuntu1804
