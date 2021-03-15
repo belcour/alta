@@ -8,7 +8,7 @@ pages:
     - cd documents
     - doxygen doxygen.conf
     - cd ..
-    - mv doxygen/documentation/html/ public/
+    - cp -r documents/doxygen/html/ public/
   artifacts:
     paths:
       - public
