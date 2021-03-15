@@ -6,7 +6,8 @@ pages:
   script:
     - pwd
     - cd documents
-    - doxygen doxygen/Doxyfile
+    - doxygen doxygen.conf
+    - cd ..
     - mv doxygen/documentation/html/ public/
   artifacts:
     paths:
