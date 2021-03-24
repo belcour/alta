@@ -19,7 +19,7 @@ Import('env', 'CheckPKG', 'library_available')
 on_windows = os.name == 'nt'
 
 if env.GetOption('clean'):
-   print "Removing all the third party packages"
+   print("Removing all the third party packages")
 
    # Removing the output build directory
    #shutil.rmtree('build', True)

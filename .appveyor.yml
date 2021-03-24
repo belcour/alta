@@ -18,7 +18,7 @@ init:
 install:
   - SET "PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - cinst nsis.portable
-  - hg clone https://bitbucket.org/eigen/eigen external\eigen3
+  - git clone https://gitlab.com/libeigen/eigen.git external\eigen3
   - cd external\eigen3
   - mkdir build & cd build
   - cmake .. -DCMAKE_INSTALL_PREFIX="..\..\build" -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles"

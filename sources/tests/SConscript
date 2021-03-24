@@ -5,16 +5,17 @@ import filecmp
 
 import obtain
 
-execfile( Dir('#sources/tests').abspath + '/test_utilities.py')
+file_to_be_executed = Dir('#sources/tests').abspath + '/test_utilities.py'
+exec( open(file_to_be_executed).read() )
 
 Import('env', 'ALTA_LIBS', 'openexr_available', 'catch_available')
 env = env.Clone()
 
 have_catch = catch_available(env)
 if not have_catch:
-  print "<<WARNING>> Could not locate Catch : Tests using catch will not be built and launched"
-  print "          Please use `git submodule init` and 'git submodule update` in external/Catch/"
-  print "           to get Catch Framework"
+  print("<<WARNING>> Could not locate Catch : Tests using catch will not be built and launched")
+  print("          Please use `git submodule init` and 'git submodule update` in external/Catch/")
+  print("           to get Catch Framework")
 
 
 have_openexr = openexr_available(env)
@@ -50,8 +51,8 @@ def check_fitting_files(fit_filename1, fit_filename2, name_of_the_norm, epsilon)
           return 1
         #end_if_else
     else:
-      print '<<<ERROR>>> Requested Norm ' + name_of_the_norm + \
-            'to compare  files '+ fit_filename1 + 'and' + fit_filename2 + 'does not exist. TEST FAILURE'
+      print ('<<<ERROR>>> Requested Norm ' + name_of_the_norm + \
+            'to compare  files '+ fit_filename1 + 'and' + fit_filename2 + 'does not exist. TEST FAILURE')
       return 1
     #end_if_else
   #end_def
@@ -290,21 +291,21 @@ def download_gold_metallic_paint(target, source, env):
   sha256 = '69c493d7f36fa5267d15948a616056f9bc84e352ec6db49b64afe6ff232e27d6'
   target = str(target[0])
 
-  print "downloading '" + target + "' from '" + url + "'"
-  print "this will take some time..."
+  print ("downloading '" + target + "' from '" + url + "'")
+  print ("this will take some time...")
   obtain.download(url, target)
   return obtain.check_integrity(target, sha256)
 
 downloadGold = env.Command(test_output_directory + '/gold-metallic-paint.binary',
-                       None, download_gold_metallic_paint)
+                           None, download_gold_metallic_paint)
 
 def download_krylon_blue(target, source, env):
   url = 'http://www.graphics.cornell.edu/online/measurements/reflectance/spraypaints/krylon_blue_RGB.astm'
   sha256 = '17f18275fb7cb302786a883e8fda8666aa59ea0b21271fd6f8a9786c5f82a653'
   target = str(target[0])
 
-  print "downloading '" + target + "' from '" + url + "'"
-  print "this will take some time..."
+  print( "downloading '" + target + "' from '" + url + "'")
+  print( "this will take some time...")
   obtain.download(url, target)
   return obtain.check_integrity(target, sha256)
 
@@ -317,8 +318,8 @@ downloadGold.noclean   = True
 downloadKrylon.noclean = True
 
 
-# Test Some basic conversion from MERL to ALTA ... 
-cmd00 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD', 
+# Test Some basic conversion from MERL to ALTA ...
+cmd00 = make_command_test('data2data', ['--param RUSIN_TH_TD_PD',
                                         '--input', test_byproduct('gold-metallic-paint.binary'),
                                         '--in-data', 'data_merl',
                                         '--output', test_byproduct('gold-metallic-paint.alta'),
@@ -633,8 +634,8 @@ if have_openexr:
 
   #end_if  UTIA No-Regression TEST
   else:
-    print "<<<WARNING>>> COULD NOT FIND m100_fabric140.exr !!! "
-    print "<<<ERROR>>>   Download and put the file in:" + test_output_directory
+    print( "<<<WARNING>>> COULD NOT FIND m100_fabric140.exr !!! ")
+    print( "<<<ERROR>>>   Download and put the file in:" + test_output_directory)
   #end_if_else
 
 
@@ -767,7 +768,7 @@ if os.path.isfile(test_file):
 # Print a summary of the tests.
 
 def display_test_name(node):
-  print "    " + os.path.basename(node.get_abspath())
+  print ("    " + os.path.basename(node.get_abspath()))
 
 tests_node = env.Alias('tests', cmd20)
 tests = tests_node[0].children()
@@ -775,10 +776,10 @@ tests = tests_node[0].children()
 tests_actually_run = filter(lambda n: n.get_abspath().endswith(".log"),
                             tests)
 
-print ""
-print "  The following test logs will be produced:"
-map(display_test_name, tests_actually_run)
-print ""
+print ("")
+print ("  The following test logs will be produced:")
+list(map(display_test_name, tests_actually_run))
+print ("")
 
 # Always run all the tests upon 'scons tests'.
 AlwaysBuild("tests")

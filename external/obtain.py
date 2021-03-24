@@ -9,6 +9,7 @@ import SCons.Warnings as W
 import SCons.SConf as C
 import mimetypes
 from subprocess import Popen, PIPE
+from urllib.request import urlretrieve
 
 # Warning class to report stuff about our dependencies.
 class AltaDependencyWarning(W.WarningOnByDefault):
@@ -50,7 +51,7 @@ def download(url, filename):
       return True
 
    try:
-      urllib.urlretrieve(url, filename)
+      urllib.request.urlretrieve(url, filename)
       return True
    except IOError as e:
       # In Python 2.x, 'urlretrieve' raises IOError upon HTTP errors,

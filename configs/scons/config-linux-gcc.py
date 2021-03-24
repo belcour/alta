@@ -84,6 +84,9 @@ CERES_OPT_LIB  = ['gomp', 'lapack', 'blas', 'amd', 'camd', 'ccolamd', 'colamd', 
 
 ## MATLAB library and Engine
 ##
-#MATLAB_INC  = ['']
-#MATLAB_DIR  = ['']
-#MATLAB_LIB  = ['eng', 'mex','mat']
+## The Directory where engine.h is located
+MATLAB_INC  = []
+## The Directory where libeng.so  libmex.so libmat.so (or .dll) libraries are located
+MATLAB_DIR  = []
+# Matlb Libraries needed at compilation and runtime
+MATLAB_LIB  = ['eng', 'mex','mat']
