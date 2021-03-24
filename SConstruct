@@ -186,7 +186,7 @@ def library_available(env, pkgspec='', lib='', header='',
     # assume that pkg-config got it right.
     result = True
   else:
-	result = conf.CheckLibWithHeader(pkgspec, header, language)
+    result = conf.CheckLibWithHeader(pkgspec, header, language)
 
   conf.Finish()
   return result
