@@ -5,13 +5,13 @@ import shutil
 import SCons.Errors as Errors
 
 # Download Eigen3
-version   = '3.2.7'
+version   = '3.3.9'
 base      = 'Eigen'
 name      = 'Eigen v' + version
-directory = 'eigen-eigen-b30b87236a1b'
-url       = 'http://bitbucket.org/eigen/eigen/get/' + version + '.tar.gz'
+directory = 'eigen-' + version
+url       = 'https://gitlab.com/libeigen/eigen/-/archive/' + version + '/eigen-' + version + '.tar.gz'
 filename  = 'eigen-' + version + '.tar.gz'
-sha256    = '5a50a006f83480a31f1f9beabec9e91dad95138df19363ee73ccf57676f10405'
+sha256    = '7985975b787340124786f092b3a07d594b2e9cd53bbfe5f3d9b1daee7d55f56f'
 obtained  = obtain.obtain(name, directory, url, filename, sha256)
 
 if obtained:
