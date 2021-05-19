@@ -425,6 +425,10 @@ ptr<function> plugins_manager::get_function(const std::string& n,
 #endif
         return NULL;
     }
+    else if(n == "rational_function")
+    {
+       return ptr<function>(new rational_function(params));
+    }
 
    FunctionPrototype myFunc = open_library<FunctionPrototype>(n, "provide_function");
     if(myFunc != NULL)
