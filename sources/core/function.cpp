@@ -50,7 +50,7 @@ void function::bootstrap(const ptr<data>, const arguments& args)
 void function::save(const std::string& filename, const arguments& args) const
 {
 	bool const is_alta     = !args.is_defined("export") || args["export"] == "alta";
-	bool const is_cpp      = args["export"] == "C++";
+	bool const is_cpp      = args["export"] == "C++" || args["export"] == "c++" || args["export"] == "cpp";
 	bool const is_explorer = args["export"] == "explorer";
 	bool const is_shader   = args["export"] == "shader" || is_explorer;
 	bool const is_matlab   = args["export"] == "matlab";
@@ -83,14 +83,16 @@ void function::save(const std::string& filename, const arguments& args) const
 
 	if(is_cpp)
 	{
-		file << "vec brdf(const vec& in, const vec& file)" << std::endl;
+		file << "#include <Eigen/Core>" << std::endl;
+		file << "typedef Eigen::VectorXd vec;" << std::endl;
+		file << std::endl;
+		file << "vec brdf(const vec& x)" << std::endl;
 		file << "{" << std::endl;
 		file << "\tvec res(" << parametrization().dimY() << ");" << std::endl;
-		file << "\t";
 	}
 	else if(is_matlab)
 	{
-		file << "function res = brdf(in, file)" << std::endl;
+		file << "function res = brdf(x)" << std::endl;
 		file << "{" << std::endl;
 		file << "\tres = zeros(" << parametrization().dimY() << ");" << std::endl;
 		file << "\t";
@@ -106,7 +108,6 @@ void function::save(const std::string& filename, const arguments& args) const
 	save_call(file, args);
 	if(is_cpp || is_shader)
 	{
-		file << ";" << std::endl;
 		file << "\treturn res;" << std::endl;
 		file << "}" << std::endl;
 	}

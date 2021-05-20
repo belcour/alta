@@ -86,9 +86,10 @@ bool rational_function_1d::load(std::istream& in)
 
 void rational_function_1d::save_body(std::ostream& out, const arguments& args) const
 {
-    bool is_matlab = args["export"] == "matlab";
-    bool is_alta   = !args.is_defined("export") || args["export"] == "alta";
-		 
+    bool const is_matlab = args["export"] == "matlab";
+	bool const is_cpp      = args["export"] == "C++" || args["export"] == "c++" || args["export"] == "cpp";
+    bool const is_alta   = !args.is_defined("export") || args["export"] == "alta";
+
 	 const unsigned int np = _p_coeffs.size();
 	 const unsigned int nq = _q_coeffs.size();
 
@@ -116,7 +117,6 @@ void rational_function_1d::save_body(std::ostream& out, const arguments& args) c
 	 }
 	 else if(is_matlab)
 	 {
-
 		 out << "(";
 		 for(unsigned int i=0; i<np; ++i)
 		 {
@@ -124,7 +124,7 @@ void rational_function_1d::save_body(std::ostream& out, const arguments& args) c
 			 for(int k=0; k<_parameters.dimX(); ++k)
 			 {
 				 if(k != _parameters.dimX()-1) { out << ".*"; }
-				 out << "x(k).^" << _q_coeffs[i].deg[k];
+				 out << "x(k).^" << _p_coeffs[i].deg[k];
 			 }
 			 if(i != np-1) { out << " + "; }
 		 }
@@ -132,7 +132,7 @@ void rational_function_1d::save_body(std::ostream& out, const arguments& args) c
 
 		 for(unsigned int i=0; i<nq; ++i)
 		 {
-			 out << _p_coeffs[i].a << "x.^" << i;
+			 out << _q_coeffs[i].a << "x.^" << i;
 			 for(int k=0; k<_parameters.dimX(); ++k)
 			 {
 				 if(k != _parameters.dimX()-1) { out << ".*"; }
@@ -141,6 +141,33 @@ void rational_function_1d::save_body(std::ostream& out, const arguments& args) c
 			 if(i != nq-1) { out << " + "; }
 		 }
 		 out << ")";
+	 }
+	else if(is_cpp)
+	 {
+		 out << "\tdouble num = ";
+		 for(unsigned int i=0; i<np; ++i)
+		 {
+			 out << _p_coeffs[i].a;
+			 for(int k=0; k<_parameters.dimX(); ++k)
+			 {
+				 out << "*pow(x[" << k << "], " << _p_coeffs[i].deg[k] << ")";
+			 }
+			 if(i != np-1) { out << " + "; }
+		 }
+		 out << ";" << std::endl;
+
+		out << "\tdouble den = ";
+		 for(unsigned int i=0; i<nq; ++i)
+		 {
+			 out << _q_coeffs[i].a;
+			 for(int k=0; k<_parameters.dimX(); ++k)
+			 {
+				 out << "*pow(x[" << k << "], " << _q_coeffs[i].deg[k] << ")";
+			 }
+			 if(i != nq-1) { out << " + "; }
+		 }
+		 out << ";" << std::endl;
+		 out << "\tres[0] = num / den;" << std::endl;
 	 }
 	 else
 	 {
@@ -652,11 +679,15 @@ bool rational_function::load(std::istream& in)
 
 void rational_function::save_call(std::ostream& out, const arguments& args) const
 {
-	out.precision(64);
+	// out.precision(8);
 	out << std::scientific;
-	out << "#FUNC rational_function" << std::endl;
-	out << "#MIN "; for(int k=0; k<_parameters.dimX(); ++k) { out << _min[k] << " "; } out << std::endl;
-	out << "#MAX "; for(int k=0; k<_parameters.dimX(); ++k) { out << _max[k] << " "; } out << std::endl; 
+
+	bool is_alta = !args.is_defined("export") || args["export"] == "alta";
+	if(is_alta) {
+		out << "#FUNC rational_function" << std::endl;
+		out << "#MIN "; for(int k=0; k<_parameters.dimX(); ++k) { out << _min[k] << " "; } out << std::endl;
+		out << "#MAX "; for(int k=0; k<_parameters.dimX(); ++k) { out << _max[k] << " "; } out << std::endl; 
+	}
 
 	for(int k=0; k<_parameters.dimY(); ++k)
 	{
