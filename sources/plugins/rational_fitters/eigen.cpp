@@ -80,7 +80,6 @@ class rational_fitter_eigen : public fitter
 			timer time ;
 			time.start() ;
 
-
 			if(fit_data(d, _np, _nq, r))
 			{
 				time.stop();

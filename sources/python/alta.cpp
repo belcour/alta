@@ -172,14 +172,14 @@ static void set_function_params(ptr<function>& f, const vec& v) {
 }
 
 static vec get_function_params(ptr<function>& f) {
-		// Try to set the parameter as a nonlinear function
+	// Try to set the parameter as a nonlinear function
 	ptr<nonlinear_function> nf = dynamic_pointer_cast<nonlinear_function>(f);
 	if(nf) {
 		return nf->parameters();
 	}
 
 	std::cerr << "<<ERROR>> Parameters cannot be retrieved" << std::endl;
-	vec res(1);
+	vec res(0);
 	return res;
 }
 
@@ -315,11 +315,11 @@ inline void register_function(py::module& m) {
 		.def("load",     &load_from_file)
 		.def("load",     &load_from_file_with_args)
 		.def("save",     &function::save)
-        .def("save",     &save_function_without_args)
+      .def("save",     &save_function_without_args)
 		.def("set",      &set_function_params)
 		.def("get",      &get_function_params);
 	m.def("get_function", get_function, py::arg("name") = "nonlinear_function_diffuse",
-                                            py::arg("param") = parameters(6, 3, params::CARTESIAN, params::RGB_COLOR));
+                                       py::arg("param") = parameters(6, 3, params::CARTESIAN, params::RGB_COLOR));
 	m.def("get_function", get_function_from_args);
 	m.def("load_function", load_function);
 	m.def("load_function", load_function_with_args);
@@ -395,8 +395,8 @@ PYBIND11_MODULE(alta, m) {
     register_function(m);
     register_fitter(m);
 
-	/* register `softs` */
-	m.def("data2data",  data2data);
-	m.def("data2stats", data2stats);
-	m.def("brdf2data",  brdf2data);
+    /* register `softs` */
+    m.def("data2data",  data2data);
+    m.def("data2stats", data2stats);
+    m.def("brdf2data",  brdf2data);
 }
