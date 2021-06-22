@@ -86,12 +86,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 #############################
 
 function(alta_add_plugin name sources)
-	add_library(${name} SHARED sources/plugins/${sources})
+    add_library(${name} SHARED sources/plugins/${sources})
         target_link_libraries(${name} core)
 endfunction(alta_add_plugin)
 
 function(alta_add_soft name sources)
-	add_executable(${name} sources/softs/${sources})
+    add_executable(${name} sources/softs/${sources})
         target_link_libraries(${name} core)
 endfunction(alta_add_soft)
 
@@ -134,10 +134,10 @@ function(alta_download_merl name)
     find_file(${name}_FOUND "${name}.binary" PATHS "${CMAKE_BINARY_DIR}/tests/")
     if(NOT ${name}_FOUND)
         message("Dowloading ${name} from MERL database:")
-	file(DOWNLOAD
-	     "http://people.csail.mit.edu/wojciech/BRDFDatabase/brdfs/${name}.binary"
-	     "${CMAKE_BINARY_DIR}/tests/${name}.binary" SHOW_PROGRESS)
-	set(${name}_FOUND TRUE PARENT_SCOPE)
+    file(DOWNLOAD
+         "http://people.csail.mit.edu/wojciech/BRDFDatabase/brdfs/${name}.binary"
+         "${CMAKE_BINARY_DIR}/tests/${name}.binary" SHOW_PROGRESS)
+    set(${name}_FOUND TRUE PARENT_SCOPE)
     endif()
 endfunction(alta_download_merl)
 
@@ -206,9 +206,9 @@ endif()
 #alta_add_plugin(data_matlab data_interpolants/matlab.cpp)
 
 # Functions
-alta_add_plugin(rational_function_legendre		rational_function_legendre/rational_function.cpp)
-alta_add_plugin(rational_function_chebychev		rational_function_chebychev/rational_function.cpp)
-alta_add_plugin(rational_function_cosine 		rational_function_cosine/rational_function.cpp)
+alta_add_plugin(rational_function_legendre		        rational_function_legendre/rational_function.cpp)
+alta_add_plugin(rational_function_chebychev		        rational_function_chebychev/rational_function.cpp)
+alta_add_plugin(rational_function_cosine 		           rational_function_cosine/rational_function.cpp)
 alta_add_plugin(nonlinear_function_abc                  nonlinear_function_abc/function.cpp)
 alta_add_plugin(nonlinear_function_beckmann             nonlinear_function_beckmann/function.cpp)
 alta_add_plugin(nonlinear_function_blinn                nonlinear_function_blinn/function.cpp)
@@ -219,9 +219,9 @@ alta_add_plugin(nonlinear_function_spherical_gaussian   nonlinear_function_spher
 alta_add_plugin(nonlinear_function_ward                 nonlinear_function_ward/function.cpp)
 
 alta_add_plugin(nonlinear_function_retrobeckmann        nonlinear_function_retrobeckmann/function.cpp)
-alta_add_plugin(nonlinear_function_retroblinn		nonlinear_function_retroblinn/function.cpp)
+alta_add_plugin(nonlinear_function_retroblinn   	     nonlinear_function_retroblinn/function.cpp)
 alta_add_plugin(nonlinear_function_retroyoo             nonlinear_function_retroyoo/function.cpp)
-alta_add_plugin(nonlinear_fresnel_retroschlick		nonlinear_fresnel_retroschlick/function.cpp)
+alta_add_plugin(nonlinear_fresnel_retroschlick		     nonlinear_fresnel_retroschlick/function.cpp)
 
 alta_add_plugin(nonlinear_fresnel_schlick               nonlinear_fresnel_schlick/function.cpp)
 alta_add_plugin(nonlinear_fresnel_normalized_schlick    nonlinear_fresnel_normalized_schlick/function.cpp)
@@ -231,10 +231,10 @@ alta_add_plugin(nonlinear_shadowing_smith               nonlinear_shadowing_smit
 alta_add_plugin(nonlinear_shadowing_walter_smith        nonlinear_shadowing_walter_smith/function.cpp)
 
 # Fitters
-alta_add_plugin(rational_fitter_eigen 			rational_fitter_eigen/rational_fitter.cpp)
-alta_add_plugin(rational_fitter_leastsquare		rational_fitter_leastsquare/rational_fitter.cpp)
-alta_add_plugin(rational_fitter_quadprog		rational_fitter_quadprog/rational_fitter.cpp)
-alta_add_plugin(rational_fitter_parallel		rational_fitter_parallel/rational_fitter.cpp)
+alta_add_plugin(rational_fitter_eigen 			           rational_fitters/eigen.cpp)
+alta_add_plugin(rational_fitter_leastsquare		        rational_fitters/leastsquare.cpp)
+alta_add_plugin(rational_fitter_quadprog		           rational_fitters/quadprog.cpp)
+alta_add_plugin(rational_fitter_parallel		           rational_fitters/quadprog_parallel.cpp)
 alta_add_plugin(nonlinear_fitter_eigen                  nonlinear_fitter_eigen/fitter.cpp)
 target_link_libraries(rational_fitter_quadprog quadprog)
 target_link_libraries(rational_fitter_parallel quadprog)
@@ -318,7 +318,7 @@ set(PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/python/)
 
 #INSTALL TARGETS = alta.lib and alta.pyd
 if(PYTHONLIBS_FOUND AND PYBIND_FOUND )
-	install( TARGETS ${PROJECT_NAME} DESTINATION ${LIB_INSTALL_DIR})
+    install( TARGETS ${PROJECT_NAME} DESTINATION ${LIB_INSTALL_DIR})
 endif()
 
 install( TARGETS core DESTINATION ${LIB_INSTALL_DIR})
@@ -465,8 +465,8 @@ endif()
 
 # add a target to generate API documentation with Doxygen
 if(DOXYGEN_FOUND)
-	add_custom_target(doc
-			  ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documents/doxygen.conf
-			  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/documents/
-			  COMMENT "Generating API documentation with Doxygen" VERBATIM)
+    add_custom_target(doc
+              ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/documents/doxygen.conf
+              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/documents/
+              COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif(DOXYGEN_FOUND)

@@ -1,6 +1,0 @@
-Import('env')
-
-sources = ['rational_fitter.cpp']
-targets = env.SharedLibrary('#build/plugins/rational_fitter_eigen',
-                            sources, LIBS = ['core'])
-Return('targets')
