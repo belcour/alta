@@ -127,10 +127,8 @@ bool rational_fitter_eigen::fit_data(const ptr<vertical_segment>& d, int np, int
 			// Filling the q part
 			else
 			{
-				vec yl, yu ; 
-				d->get(i, yl, yu) ;
-
-				const double y  = 0.5*(yl[ny] + yu[ny]) ;
+				vec v = d->get(i) ;
+				const double y  = v[d->parametrization().dimX() + ny] ;
 				const double qi = r->q(d->get(i), j-np) ;
 				CI(j, i) = -y * qi ;
 			}

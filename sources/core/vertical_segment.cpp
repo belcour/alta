@@ -106,7 +106,7 @@ vertical_segment::vertical_segment(const parameters& params, unsigned int rows):
 void vertical_segment::get(int i, vec& x, vec& yl, vec& yu) const
 {
     // Make sure we have the lower and upper bounds of Y.
-    assert(confidence_interval_kind() == ASYMMETRICAL_CONFIDENCE_INTERVAL);
+    //assert(confidence_interval_kind() == ASYMMETRICAL_CONFIDENCE_INTERVAL);
 
     auto row = matrix_view().row(i);
 
@@ -114,11 +114,26 @@ void vertical_segment::get(int i, vec& x, vec& yl, vec& yu) const
 
     auto y = row.segment(_parameters.dimX(), _parameters.dimY());
 
-    yl = row.segment(_parameters.dimX() + _parameters.dimY(),
-                     _parameters.dimY());
+    switch(confidence_interval_kind()) {
+	case ASYMMETRICAL_CONFIDENCE_INTERVAL:
+	    yl = row.segment(_parameters.dimX() + _parameters.dimY(),
+			    _parameters.dimY());
+	    yu = row.segment(_parameters.dimX() + 2 * _parameters.dimY(),
+			    _parameters.dimY());
+	    break;
 
-    yu = row.segment(_parameters.dimX() + 2 * _parameters.dimY(),
-                     _parameters.dimY());
+	case SYMMETRICAL_CONFIDENCE_INTERVAL:
+	    yl = y - row.segment(_parameters.dimX() + _parameters.dimY(),
+			         _parameters.dimY());
+	    yu = y - row.segment(_parameters.dimX() + _parameters.dimY(),
+			         _parameters.dimY());
+	    break;
+	
+	case NO_CONFIDENCE_INTERVAL:
+	    yl = y.array() - _dt;
+	    yu = y.array() + _dt;
+	    break;
+    }
 }
 
 void vertical_segment::get(int i, vec& yl, vec& yu) const

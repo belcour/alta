@@ -1,0 +1,18 @@
+# This file is a template, and might need editing before it works on your project.
+# Full project: https://gitlab.com/pages/doxygen
+# image: alpine
+
+pages:
+  script:
+    - pwd
+    - cd documents
+    - doxygen doxygen.conf
+    - cd ..
+    - cp -r documents/doxygen/html/ public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - master
+  tags:
+    - ubuntu1804

@@ -66,7 +66,7 @@ static ptr<function> get_function_from_args(const python_arguments& args,
 static ptr<function> load_function(const std::string& filename) {
     return ptr<function>(plugins_manager::load_function(filename));
 }
-static ptr<function> load_function_with_args(const std::string& filename, const arguments&) {
+static ptr<function> load_function_with_args(const std::string& filename, const python_arguments&) {
     return ptr<function>(plugins_manager::load_function(filename));
 }
 
@@ -76,7 +76,7 @@ static ptr<function> load_function_with_args(const std::string& filename, const 
  */
 static void load_from_file_with_args(const ptr<function>& func,
                                      const std::string& filename,
-                                     const arguments& args) {
+                                     const python_arguments& args) {
 
    // Open a stream
    std::ifstream file;
@@ -94,7 +94,7 @@ static void load_from_file_with_args(const ptr<function>& func,
 }
 static void load_from_file(const ptr<function>& func, const std::string& filename) {
 
-   arguments args;
+   python_arguments args;
    load_from_file_with_args(func, filename, args);
 }
 
@@ -203,7 +203,7 @@ static bool fit_data_without_args(const ptr<fitter>& _fitter,
 
 static bool fit_data_with_args(ptr<fitter>& _fitter, const ptr<data>& _data,
                                ptr<function>& _func,
-                               const arguments& args) {
+                               const python_arguments& args) {
    _fitter->set_parameters(args);
    return _fitter->fit_data(_data, _func, args);
 }
@@ -318,8 +318,8 @@ inline void register_function(py::module& m) {
         .def("save",     &save_function_without_args)
 		.def("set",      &set_function_params)
 		.def("get",      &get_function_params);
-	m.def("get_function", get_function, py::arg("name") = "nonlinear_diffuse",
-                                        py::arg("param") = parameters(6, 3, params::CARTESIAN, params::RGB_COLOR));
+	m.def("get_function", get_function, py::arg("name") = "nonlinear_function_diffuse",
+                                            py::arg("param") = parameters(6, 3, params::CARTESIAN, params::RGB_COLOR));
 	m.def("get_function", get_function_from_args);
 	m.def("load_function", load_function);
 	m.def("load_function", load_function_with_args);
@@ -328,7 +328,7 @@ inline void register_function(py::module& m) {
 inline void register_fitter(py::module& m) {
 	py::class_<fitter, ptr<fitter>>(m, "fitter")
 		.def("fit_data", &fit_data_with_args)
-        .def("fit_data", &fit_data_without_args);
+                .def("fit_data", &fit_data_without_args);
 	m.def("get_fitter",  plugins_manager::get_fitter);
 }
 

@@ -48,6 +48,9 @@ static ptr<data> get_data(const std::string& plugin_name, size_t size,
  */
 inline void register_data(py::module& m) {
    py::class_<data, ptr<data>>(m, "data")
+      .def("__getitem__", &data::get)
+      .def("__setitem__", &data::set)
+      .def("__len__", &data::size)
       .def("size",  &data::size)
       .def("get",   &data::get)
       .def("set",   &data::set)

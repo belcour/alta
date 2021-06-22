@@ -54,7 +54,7 @@ struct python_arguments : public arguments {
 inline void register_args(py::module& m) {
     py::class_<python_arguments>(m, "arguments")
         .def(py::init<>())
-		.def(py::init<py::dict>())
+	.def(py::init<py::dict>())
         .def("__getitem__", &arguments::operator[])
-		.def("update", &arguments::update);
+	.def("update", &arguments::update);
 }
