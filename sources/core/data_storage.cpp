@@ -99,7 +99,7 @@ static void read_confidence_interval(std::istream& input,
     {
         double min_dt = 0.0, max_dt = 0.0;
 
-        if(i == 0 && kind == vertical_segment::ASYMMETRICAL_CONFIDENCE_INTERVAL)
+        if(kind == vertical_segment::ASYMMETRICAL_CONFIDENCE_INTERVAL)
         {
             input >> min_dt ;
             input >> max_dt ;
@@ -107,7 +107,7 @@ static void read_confidence_interval(std::istream& input,
             //max_dt = max_dt-v(dimX + i);
             min_dt = -min_dt;
         }
-        else if(i == 0 && kind == vertical_segment::SYMMETRICAL_CONFIDENCE_INTERVAL)
+        else if(kind == vertical_segment::SYMMETRICAL_CONFIDENCE_INTERVAL)
         {
             double dt ;
             input >> dt ;
