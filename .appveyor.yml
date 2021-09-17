@@ -62,7 +62,7 @@ build_script:
   # Build with CERES and Python
   - mkdir build &
   - cd build &
-  - cmake .. -DPython_Version="3.6" -DEIGEN3_INCLUDE_DIR="external/build/include/eigen3" -DCeres_DIR="external/build/CMake" -DNLOPT_INCLUDE_DIRS="../external/build/include" -DNLOPT_LIBRARIES="../external/build/lib/nlopt.lib" -Wdev -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON  -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles" &
+  - cmake .. -DPython_Version="3.6" -DEIGEN3_INCLUDE_DIR="../external/build/include/eigen3" -DCeres_DIR="../external/build/CMake" -DNLOPT_INCLUDE_DIRS="../external/build/include" -DNLOPT_LIBRARIES="../external/build/lib/nlopt.lib" -Wdev -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON  -DCMAKE_BUILD_TYPE=Release -G "NMake Makefiles" &
   - nmake /NOLOGO &
   - cd ..
 

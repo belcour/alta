@@ -4,15 +4,17 @@ env:
 os:
     - linux
     - osx
-
-dist: trusty
+python:
+   - '3.8'
+dist:
+   - focal
 sudo: required
 addons:
     apt:
         sources:
             - ubuntu-toolchain-r-test
         packages:
-            - g++-6
+            - g++
             - cmake
             - libboost-python-dev
             - libeigen3-dev
