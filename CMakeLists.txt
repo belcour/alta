@@ -32,8 +32,9 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/configs/cmake/)
 # Find required packages
 find_package(Eigen3)
 find_package(OpenMP)
-find_package(PythonInterp)
-find_package(PythonLibs)
+#find_package(PythonInterp)
+#find_package(PythonLibs)
+find_package(Python3 COMPONENTS Interpreter Development)
 find_package(Doxygen)
 find_package(Ceres)
 find_package(NLOPT)
@@ -271,15 +272,15 @@ endif()
 #alta_add_plugin(nonlinear_fitter_ipopt                  nonlinear_fitter_ipopt/fitter.cpp)
 
 # Python bindings
-if(PYTHONLIBS_FOUND AND PYBIND_FOUND)
+if(Python3_FOUND AND PYBIND_FOUND)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/python)
     # Note: Required on windows to build the python dll in the 'python'
     # directory. [Laurent] I have no idea why this is needed.
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/python)
 
-    include_directories(${PYTHON_INCLUDE_DIRS})
+    include_directories(${Python3_INCLUDE_DIRS})
     add_library(alta SHARED sources/python/alta.cpp)
-    target_link_libraries(alta core ${PYTHON_LIBRARIES})
+    target_link_libraries(alta core ${Python3_LIBRARIES})
     set_target_properties(alta PROPERTIES PREFIX "")
     if(APPLE)
         set_target_properties(alta PROPERTIES SUFFIX ".so")
@@ -317,7 +318,7 @@ set(PLUGIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/plugins/)
 set(PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/python/)
 
 #INSTALL TARGETS = alta.lib and alta.pyd
-if(PYTHONLIBS_FOUND AND PYBIND_FOUND )
+if(Python3_FOUND AND PYBIND_FOUND )
     install( TARGETS ${PROJECT_NAME} DESTINATION ${LIB_INSTALL_DIR})
 endif()
 
@@ -452,15 +453,15 @@ foreach(fitter IN ITEMS ${nonlinear_fitters})
                       "--func"   "[nonlinear_function_diffuse, nonlinear_function_blinn]")
 endforeach()
 
-if(PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND AND PYBIND_FOUND)
+if(Python3_FOUND AND PYBIND_FOUND)
     alta_test_python(NAME "python_test_arguments"
-                     COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-arguments.py")
+                     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-arguments.py")
 
     alta_test_python(NAME "python_test_vec"
-                     COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-vec.py")
+                     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-vec.py")
 
     alta_test_python(NAME "python_test_function"
-                     COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-python-function.py")
+                     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/sources/tests/python/test-python-function.py")
 endif()
 
 # add a target to generate API documentation with Doxygen
